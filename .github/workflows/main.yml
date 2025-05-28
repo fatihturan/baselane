@@ -11,16 +11,15 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GH_PAT }}
 
-      - name: Set up Git
+      - name: Configure Git
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Move 'latest' tag to current commit
-        env:
-          GH_PAT: ${{ secrets.GH_PAT }}
+      - name: Create or move 'latest' tag to current commit
         run: |
           git tag -f latest
-          git remote set-url origin https://x-access-token:${GH_PAT}@github.com/${{ github.repository }}.git
           git push origin latest --force
