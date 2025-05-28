@@ -18,6 +18,9 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Move 'latest' tag to current commit
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
         run: |
           git tag -f latest
+          git remote set-url origin https://x-access-token:${GH_PAT}@github.com/${{ github.repository }}.git
           git push origin latest --force
