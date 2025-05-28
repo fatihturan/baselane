@@ -35,10 +35,18 @@ function updateDynamicValues() {
 
     textNodes.forEach(textNode => {
         let content = textNode.textContent;
-        const pattern = /\[v="([^"]+)"\][^\[]*\[\/v\]/g;
         let hasChanges = false;
         
-        content = content.replace(pattern, (match, key) => {
+        // Pattern for [v="key"]value[/v] format
+        const fullPattern = /\[v="([^"]+)"\][^\[]*\[\/v\]/g;
+        content = content.replace(fullPattern, (match, key) => {
+            hasChanges = true;
+            return acfData[key] || match;
+        });
+        
+        // Pattern for [v="key"] format
+        const shortPattern = /\[v="([^"]+)"\]/g;
+        content = content.replace(shortPattern, (match, key) => {
             hasChanges = true;
             return acfData[key] || match;
         });
