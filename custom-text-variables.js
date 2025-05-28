@@ -19,6 +19,7 @@ const acfData = {
     "apytier3": "3.06%"
 };
 
+// Update the dynamic values
 function updateDynamicValues() {
     const walker = document.createTreeWalker(
         document.body,
