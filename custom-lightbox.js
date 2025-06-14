@@ -44,7 +44,6 @@ function initializeGLightbox() {
       autoplayVideos: true
     });
     
-    console.log('GLightbox initialized successfully');
   }
 }
 
