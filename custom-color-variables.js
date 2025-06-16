@@ -1,19 +1,15 @@
 function initializeSetColorVariables() {
-  const elementsWithColors = document.querySelectorAll('[primary-color], [secondary-color]');
+  const elementsWithCustomColors = document.querySelectorAll('[custom-color]');
   
-  elementsWithColors.forEach((element, index) => {
-    const primaryColor = element.getAttribute('primary-color');
-    const secondaryColor = element.getAttribute('secondary-color');
-    
-    // Handle primary color
-    if (primaryColor && primaryColor.trim() !== '') {
-      element.style.setProperty('--primary-color', primaryColor);
-    }
-    
-    // Handle secondary color as CSS variable
-    if (secondaryColor && secondaryColor.trim() !== '') {
-      element.style.setProperty('--secondary-color', secondaryColor);
-    }
+  elementsWithCustomColors.forEach((element) => {
+    // Check all attributes of the element
+    Array.from(element.attributes).forEach((attr) => {
+      // If attribute name starts with 'custom-color-'
+      if (attr.name.startsWith('custom-color-') && attr.value && attr.value.trim() !== '') {
+        // Set CSS variable with the same name
+        element.style.setProperty(`--${attr.name}`, attr.value);
+      }
+    });
   });
 }
 
