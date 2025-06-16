@@ -20,7 +20,7 @@ jobs:
         run: |
           baseUrl="https://cdn.jsdelivr.net/gh/${{ github.repository }}@latest"
           urls=""
-          for f in $(find dist -name "*.js" -type f); do
+          for f in $(find . -name "*.js" -type f); do
             urls+="${baseUrl}/${f},"
           done
           echo "urls=${urls%,*}" >> "${GITHUB_OUTPUT}"
