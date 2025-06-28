@@ -1,4 +1,4 @@
-name: Auto Version and Purge
+name: Auto Version and Purge All Caches
 
 on:
   push:
@@ -19,11 +19,9 @@ jobs:
       - name: Get current version and create new one
         id: version
         run: |
-          # Get latest tag or start with v1.0.0
           LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
           echo "Latest tag: $LATEST_TAG"
           
-          # Extract version numbers
           if [[ $LATEST_TAG =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
             MAJOR=${BASH_REMATCH[1]}
             MINOR=${BASH_REMATCH[2]}
@@ -44,33 +42,76 @@ jobs:
           git tag ${{ steps.version.outputs.new_version }}
           git push origin ${{ steps.version.outputs.new_version }}
 
-      - name: Wait for tag to propagate
-        run: sleep 10
-
-      - name: Purge JSDeliver Cache
+      - name: Get ETag before purge
+        id: etag-before
         run: |
-          echo "Purging JSDeliver cache..."
-          
-          # Purge main branch (GET request)
-          echo "Purging main branch..."
-          curl -v "https://purge.jsdelivr.net/gh/${{ github.repository }}@main/custom-lightbox.js"
-          
-          echo ""
-          echo "Waiting 5 seconds..."
-          sleep 5
-          
-          # Purge new version
-          echo "Purging new version..."
-          curl -v "https://purge.jsdelivr.net/gh/${{ github.repository }}@${{ steps.version.outputs.new_version }}/custom-lightbox.js"
-          
-          echo ""
-          echo "✅ Cache purge completed!"
-          echo ""
-          echo "🚀 New version: ${{ steps.version.outputs.new_version }}"
-          echo "🔗 Use: https://cdn.jsdelivr.net/gh/${{ github.repository }}@${{ steps.version.outputs.new_version }}/custom-lightbox.js"
-          echo "🔗 Or: https://cdn.jsdelivr.net/gh/${{ github.repository }}@main/custom-lightbox.js"
+          ETAG_BEFORE=$(curl -sI "https://cdn.jsdelivr.net/gh/${{ github.repository }}@main/custom-lightbox.js" | grep -i "etag:" | cut -d' ' -f2- | tr -d '\r')
+          echo "ETag before purge: $ETAG_BEFORE"
+          echo "etag_before=$ETAG_BEFORE" >> $GITHUB_OUTPUT
 
-      - name: Create release
+      - name: Aggressive Multi-Layer Cache Purge
+        run: |
+          echo "🧹 Starting aggressive cache purge..."
+          
+          # JSDeliver purge attempts
+          echo "Step 1: JSDeliver cache purge..."
+          curl -s "https://purge.jsdelivr.net/gh/${{ github.repository }}@main/custom-lightbox.js"
+          curl -s "https://purge.jsdelivr.net/gh/${{ github.repository }}@main/*"
+          curl -s "https://purge.jsdelivr.net/gh/${{ github.repository }}@main"
+          curl -s "https://purge.jsdelivr.net/gh/${{ github.repository }}"
+          
+          echo "Step 2: Force fresh requests to bypass Cloudflare..."
+          # Multiple requests with different cache busters to force CF refresh
+          for i in {1..5}; do
+            curl -H "Cache-Control: no-store" \
+                 -H "Pragma: no-cache" \
+                 -H "User-Agent: GitHub-Actions-Cache-Buster-$i" \
+                 -s "https://cdn.jsdelivr.net/gh/${{ github.repository }}@main/custom-lightbox.js?cb=$(date +%s)$i" > /dev/null
+            sleep 2
+          done
+          
+          echo "Step 3: Waiting for propagation..."
+          sleep 30
+
+      - name: Test cache status after purge
+        run: |
+          echo "🔍 Testing cache status after purge..."
+          echo "========================="
+          
+          RESPONSE=$(curl -H "Cache-Control: no-cache" -H "Pragma: no-cache" -sI "https://cdn.jsdelivr.net/gh/${{ github.repository }}@main/custom-lightbox.js")
+          
+          # Extract headers
+          ETAG_AFTER=$(echo "$RESPONSE" | grep -i "etag:" | cut -d' ' -f2- | tr -d '\r')
+          CF_CACHE=$(echo "$RESPONSE" | grep -i "cf-cache-status:" | cut -d' ' -f2- | tr -d '\r')
+          X_CACHE=$(echo "$RESPONSE" | grep -i "x-cache:" | cut -d' ' -f2- | tr -d '\r')
+          AGE=$(echo "$RESPONSE" | grep -i "age:" | cut -d' ' -f2- | tr -d '\r')
+          
+          echo "📝 Cache Status:"
+          echo "ETag Before: ${{ steps.etag-before.outputs.etag_before }}"
+          echo "ETag After:  $ETAG_AFTER"
+          echo "CF Cache:    $CF_CACHE"
+          echo "X-Cache:     $X_CACHE"
+          echo "Age:         $AGE seconds"
+          echo "========================="
+          
+          # Determine if cache was updated
+          if [ "${{ steps.etag-before.outputs.etag_before }}" != "$ETAG_AFTER" ]; then
+            echo "✅ SUCCESS: Cache updated! ETags are different"
+            CACHE_STATUS="✅ Updated"
+          else
+            echo "❌ WARNING: Cache might not be updated, ETags are same"
+            CACHE_STATUS="❌ Possibly stale"
+          fi
+          
+          if [ "$CF_CACHE" = "MISS" ] && [ "$X_CACHE" = "MISS, MISS" ]; then
+            echo "✅ EXCELLENT: Fresh content from origin"
+          else
+            echo "⚠️  WARNING: Still serving from cache layers"
+          fi
+          
+          echo "cache_status=$CACHE_STATUS" >> $GITHUB_ENV
+
+      - name: Create commit comment with results
         uses: actions/github-script@v6
         with:
           script: |
@@ -80,11 +121,13 @@ jobs:
               commit_sha: context.sha,
               body: `🚀 **Auto-versioned to ${{ steps.version.outputs.new_version }}**
               
-              ✅ JSDeliver cache purged!
+              **Cache Status:** ${{ env.cache_status }}
               
-              **Use one of these URLs:**
-              - Latest: \`https://cdn.jsdelivr.net/gh/${{ github.repository }}@main/custom-lightbox.js\`
-              - Versioned: \`https://cdn.jsdelivr.net/gh/${{ github.repository }}@${{ steps.version.outputs.new_version }}/custom-lightbox.js\`
+              **URLs to use:**
+              - 🎯 **Versioned (Recommended):** \`https://cdn.jsdelivr.net/gh/${{ github.repository }}@${{ steps.version.outputs.new_version }}/custom-lightbox.js\`
+              - 🔄 **Main branch:** \`https://cdn.jsdelivr.net/gh/${{ github.repository }}@main/custom-lightbox.js\`
+              - 📦 **GitHub Pages:** \`https://${{ github.repository_owner }}.github.io/baselane/custom-lightbox.js\`
+              - 🏃 **Alternative CDN:** \`https://cdn.statically.io/gh/${{ github.repository }}/main/custom-lightbox.js\`
               
-              Cache will be updated within 5-10 minutes.`
+              💡 **Tip:** Use versioned URL for production to avoid cache issues!`
             })
