@@ -1,4 +1,4 @@
-// All custom text variables
+// Custom text variables
 const acfData = {
     "apyvalue": "3.35%",
     "apymultiple": "60x",
