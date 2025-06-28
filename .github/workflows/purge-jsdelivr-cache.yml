@@ -1,0 +1,46 @@
+name: Auto Version and Purge
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - '**.js'
+      - '**.css'
+
+jobs:
+  version-and-purge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get current version
+        id: version
+        run: |
+          # Get latest tag or start with v1.0.0
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v1.0.0")
+          echo "current_tag=$LATEST_TAG" >> $GITHUB_OUTPUT
+          
+          # Increment patch version
+          NEW_VERSION=$(echo $LATEST_TAG | awk -F. '/^v/{$NF = $NF + 1; print}' OFS=.)
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Create new tag
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git tag ${{ steps.version.outputs.new_version }}
+          git push origin ${{ steps.version.outputs.new_version }}
+
+      - name: Purge JSDeliver Cache
+        run: |
+          # Purge main branch
+          curl -X POST "https://purge.jsdelivr.net/gh/${{ github.repository }}@main/custom-lightbox.js"
+          
+          # Purge new version
+          curl -X POST "https://purge.jsdelivr.net/gh/${{ github.repository }}@${{ steps.version.outputs.new_version }}/custom-lightbox.js"
+          
+          echo "New version: ${{ steps.version.outputs.new_version }}"
+          echo "Use: https://cdn.jsdelivr.net/gh/${{ github.repository }}@${{ steps.version.outputs.new_version }}/custom-lightbox.js"
