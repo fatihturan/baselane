@@ -146,29 +146,41 @@ jobs:
 
       - name: Create release comment
         uses: actions/github-script@v6
+        env:
+          NEW_VERSION: ${{ steps.version.outputs.new_version }}
+          CHANGED_FILES: ${{ steps.changed-files.outputs.changed_files }}
+          FILE_URLS: ${{ steps.urls.outputs.file_urls }}
+          REPO_OWNER: ${{ github.repository_owner }}
+          REPO_NAME: ${{ github.repository }}
         with:
           script: |
-            const changedFiles = "${{ steps.changed-files.outputs.changed_files }}";
+            const newVersion = process.env.NEW_VERSION;
+            const changedFiles = process.env.CHANGED_FILES;
+            const fileUrls = process.env.FILE_URLS;
+            const repoOwner = process.env.REPO_OWNER;
+            const repoName = process.env.REPO_NAME;
             
-            let bodyContent = `🚀 **Auto-versioned to ${{ steps.version.outputs.new_version }}**
-            
-            ✅ JSDeliver cache purged for all changed files!
-            
-            **Changed files and their URLs:**
-            ${{ steps.urls.outputs.file_urls }}
-            
-            **Alternative CDNs:**
-            - GitHub Pages: \`https://${{ github.repository_owner }}.github.io/baselane/[filename]\`
-            - Statically: \`https://cdn.statically.io/gh/${{ github.repository }}/main/[filename]\`
-            
-            💡 **Tip:** Replace [filename] with your actual file name.
-            
-            Cache will be updated within 5-10 minutes.`;
+            let bodyContent;
             
             if (!changedFiles || changedFiles.trim() === "") {
-              bodyContent = `🚀 **Auto-versioned to ${{ steps.version.outputs.new_version }}**
+              bodyContent = `🚀 **Auto-versioned to ${newVersion}**
               
               ℹ️ No JS/CSS files were changed in this commit.`;
+            } else {
+              bodyContent = `🚀 **Auto-versioned to ${newVersion}**
+              
+              ✅ JSDeliver cache purged for all changed files!
+              
+              **Changed files and their URLs:**
+              ${fileUrls}
+              
+              **Alternative CDNs:**
+              - GitHub Pages: \`https://${repoOwner}.github.io/baselane/[filename]\`
+              - Statically: \`https://cdn.statically.io/gh/${repoName}/main/[filename]\`
+              
+              💡 **Tip:** Replace [filename] with your actual file name.
+              
+              Cache will be updated within 5-10 minutes.`;
             }
             
             github.rest.repos.createCommitComment({
