@@ -1,4 +1,4 @@
-// Starting!
+// Check if there any .lightbox element exist first
 function checkAndLoadGLightbox() {
   const lightboxElements = document.querySelectorAll('.lightbox');
 
