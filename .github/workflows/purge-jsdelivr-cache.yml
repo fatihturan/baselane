@@ -13,17 +13,33 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          fetch-depth: 0
+          fetch-depth: 2
           token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get changed files
+        id: changed-files
+        run: |
+          # Get changed JS and CSS files
+          CHANGED_FILES=$(git diff --name-only HEAD^ HEAD | grep -E '\.(js|css)$' || echo "")
+          
+          if [ -z "$CHANGED_FILES" ]; then
+            echo "No JS/CSS files changed"
+            echo "changed_files=" >> $GITHUB_OUTPUT
+          else
+            echo "Changed files:"
+            echo "$CHANGED_FILES"
+            
+            # Convert to space-separated list for easier handling
+            FILES_LIST=$(echo "$CHANGED_FILES" | tr '\n' ' ' | sed 's/ $//')
+            echo "changed_files=$FILES_LIST" >> $GITHUB_OUTPUT
+          fi
 
       - name: Get current version and create new one
         id: version
         run: |
-          # Get latest tag or start with v1.0.0
           LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
           echo "Latest tag: $LATEST_TAG"
           
-          # Extract version numbers
           if [[ $LATEST_TAG =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
             MAJOR=${BASH_REMATCH[1]}
             MINOR=${BASH_REMATCH[2]}
@@ -47,44 +63,117 @@ jobs:
       - name: Wait for tag to propagate
         run: sleep 10
 
-      - name: Purge JSDeliver Cache
+      - name: Purge JSDeliver Cache for All Changed Files
         run: |
-          echo "Purging JSDeliver cache..."
+          echo "🧹 Purging JSDeliver cache for all changed files..."
           
-          # Purge main branch (GET request)
-          echo "Purging main branch..."
-          curl -v "https://purge.jsdelivr.net/gh/${{ github.repository }}@main/custom-lightbox.js"
+          CHANGED_FILES="${{ steps.changed-files.outputs.changed_files }}"
+          
+          if [ -z "$CHANGED_FILES" ]; then
+            echo "No files to purge"
+            exit 0
+          fi
+          
+          echo "Files to purge: $CHANGED_FILES"
+          echo "================================"
+          
+          # Convert space-separated list back to array
+          FILES_ARRAY=($CHANGED_FILES)
+          
+          for file in "${FILES_ARRAY[@]}"; do
+            if [ ! -z "$file" ]; then
+              echo "🗂️ Purging: $file"
+              
+              # Purge main branch
+              echo "  → Purging main branch..."
+              curl -s "https://purge.jsdelivr.net/gh/${{ github.repository }}@main/$file"
+              
+              sleep 2
+              
+              # Purge new version
+              echo "  → Purging new version..."
+              curl -s "https://purge.jsdelivr.net/gh/${{ github.repository }}@${{ steps.version.outputs.new_version }}/$file"
+              
+              sleep 2
+              echo "  ✅ $file purged"
+              echo ""
+            fi
+          done
+          
+          # Also purge wildcards for good measure
+          echo "🌟 Purging wildcard patterns..."
+          curl -s "https://purge.jsdelivr.net/gh/${{ github.repository }}@main/*.js"
+          sleep 2
+          curl -s "https://purge.jsdelivr.net/gh/${{ github.repository }}@main/*.css"
+          sleep 2
+          curl -s "https://purge.jsdelivr.net/gh/${{ github.repository }}@${{ steps.version.outputs.new_version }}/*.js"
+          sleep 2
+          curl -s "https://purge.jsdelivr.net/gh/${{ github.repository }}@${{ steps.version.outputs.new_version }}/*.css"
           
           echo ""
-          echo "Waiting 5 seconds..."
-          sleep 5
-          
-          # Purge new version
-          echo "Purging new version..."
-          curl -v "https://purge.jsdelivr.net/gh/${{ github.repository }}@${{ steps.version.outputs.new_version }}/custom-lightbox.js"
-          
-          echo ""
-          echo "✅ Cache purge completed!"
-          echo ""
+          echo "✅ All cache purge completed!"
           echo "🚀 New version: ${{ steps.version.outputs.new_version }}"
-          echo "🔗 Use: https://cdn.jsdelivr.net/gh/${{ github.repository }}@${{ steps.version.outputs.new_version }}/custom-lightbox.js"
-          echo "🔗 Or: https://cdn.jsdelivr.net/gh/${{ github.repository }}@main/custom-lightbox.js"
 
-      - name: Create release
+      - name: Generate file URLs for comment
+        id: urls
+        run: |
+          CHANGED_FILES="${{ steps.changed-files.outputs.changed_files }}"
+          
+          if [ -z "$CHANGED_FILES" ]; then
+            echo "file_urls=No files changed" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          FILES_ARRAY=($CHANGED_FILES)
+          URL_LIST=""
+          
+          for file in "${FILES_ARRAY[@]}"; do
+            if [ ! -z "$file" ]; then
+              URL_LIST="$URL_LIST
+              **$file:**
+              - Latest: \`https://cdn.jsdelivr.net/gh/${{ github.repository }}@main/$file\`
+              - Versioned: \`https://cdn.jsdelivr.net/gh/${{ github.repository }}@${{ steps.version.outputs.new_version }}/$file\`
+              "
+            fi
+          done
+          
+          # Use here-doc to handle multiline
+          {
+            echo "file_urls<<EOF"
+            echo "$URL_LIST"
+            echo "EOF"
+          } >> $GITHUB_OUTPUT
+
+      - name: Create release comment
         uses: actions/github-script@v6
         with:
           script: |
+            const changedFiles = "${{ steps.changed-files.outputs.changed_files }}";
+            
+            let bodyContent = `🚀 **Auto-versioned to ${{ steps.version.outputs.new_version }}**
+            
+            ✅ JSDeliver cache purged for all changed files!
+            
+            **Changed files and their URLs:**
+            ${{ steps.urls.outputs.file_urls }}
+            
+            **Alternative CDNs:**
+            - GitHub Pages: \`https://${{ github.repository_owner }}.github.io/baselane/[filename]\`
+            - Statically: \`https://cdn.statically.io/gh/${{ github.repository }}/main/[filename]\`
+            
+            💡 **Tip:** Replace [filename] with your actual file name.
+            
+            Cache will be updated within 5-10 minutes.`;
+            
+            if (!changedFiles || changedFiles.trim() === "") {
+              bodyContent = `🚀 **Auto-versioned to ${{ steps.version.outputs.new_version }}**
+              
+              ℹ️ No JS/CSS files were changed in this commit.`;
+            }
+            
             github.rest.repos.createCommitComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               commit_sha: context.sha,
-              body: `🚀 **Auto-versioned to ${{ steps.version.outputs.new_version }}**
-              
-              ✅ JSDeliver cache purged!
-              
-              **Use one of these URLs:**
-              - Latest: \`https://cdn.jsdelivr.net/gh/${{ github.repository }}@main/custom-lightbox.js\`
-              - Versioned: \`https://cdn.jsdelivr.net/gh/${{ github.repository }}@${{ steps.version.outputs.new_version }}/custom-lightbox.js\`
-              
-              Cache will be updated within 5-10 minutes.`
-            })
+              body: bodyContent
+            });
