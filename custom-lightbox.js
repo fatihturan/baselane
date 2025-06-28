@@ -1,3 +1,4 @@
+// Starting!
 function checkAndLoadGLightbox() {
   const lightboxElements = document.querySelectorAll('.lightbox');
 
