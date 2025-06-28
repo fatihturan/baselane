@@ -32,7 +32,7 @@ function loadGLightboxScript() {
 function initializeGLightbox() {
   if (!window.GLightbox) return;
 
-  let currentLightbox = null;
+  window.currentLightbox = null;
 
   // Global event delegation for close buttons
   document.addEventListener('click', function(e) {
@@ -57,7 +57,7 @@ function initializeGLightbox() {
       const inlineElement = target && document.querySelector(target);
 
       if (inlineElement) {
-        currentLightbox = GLightbox({
+        window.currentLightbox = GLightbox({
           elements: [
             {
               content: inlineElement.outerHTML,
@@ -71,11 +71,11 @@ function initializeGLightbox() {
           closeButton: false,
           arrows: false,
           onClose: function() {
-            currentLightbox = null;
+            window.currentLightbox = null;
           }
         });
 
-        currentLightbox.open();
+        window.currentLightbox.open();
       } else {
         console.warn(`No inline content found for selector: ${target}`);
       }
@@ -96,3 +96,12 @@ function recheckLightbox() {
 }
 
 window.recheckLightbox = recheckLightbox;
+
+// Global function to close lightbox
+function closeCurrentLightbox() {
+  if (window.currentLightbox) {
+    window.currentLightbox.close();
+  }
+}
+
+window.closeCurrentLightbox = closeCurrentLightbox;
