@@ -1,4 +1,4 @@
-name: Auto Version and Purge
+name: Purge JSDeliver Cache
 
 on:
   push:
@@ -8,83 +8,35 @@ on:
       - '**.css'
 
 jobs:
-  version-and-purge:
+  purge-cache:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Get current version and create new one
-        id: version
-        run: |
-          # Get latest tag or start with v1.0.0
-          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
-          echo "Latest tag: $LATEST_TAG"
-          
-          # Extract version numbers
-          if [[ $LATEST_TAG =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
-            MAJOR=${BASH_REMATCH[1]}
-            MINOR=${BASH_REMATCH[2]}
-            PATCH=${BASH_REMATCH[3]}
-            NEW_PATCH=$((PATCH + 1))
-            NEW_VERSION="v${MAJOR}.${MINOR}.${NEW_PATCH}"
-          else
-            NEW_VERSION="v1.0.0"
-          fi
-          
-          echo "New version will be: $NEW_VERSION"
-          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
-
-      - name: Create new tag
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag ${{ steps.version.outputs.new_version }}
-          git push origin ${{ steps.version.outputs.new_version }}
-
-      - name: Wait for tag to propagate
-        run: sleep 10
-
       - name: Purge JSDeliver Cache
         run: |
-          echo "Purging JSDeliver cache..."
+          echo "🧹 Purging JSDeliver cache..."
           
-          # Purge main branch (GET request)
-          echo "Purging main branch..."
-          curl -v "https://purge.jsdelivr.net/gh/${{ github.repository }}@main/custom-lightbox.js"
+          # Multiple files
+          FILES=(
+            "custom-lightbox.js"
+            # Add more files here if needed
+          )
           
-          echo ""
-          echo "Waiting 5 seconds..."
-          sleep 5
+          for file in "${FILES[@]}"; do
+            echo "Purging: $file"
+            curl -s "https://purge.jsdelivr.net/gh/${{ github.repository }}@main/$file"
+            echo ""
+            sleep 2
+          done
           
-          # Purge new version
-          echo "Purging new version..."
-          curl -v "https://purge.jsdelivr.net/gh/${{ github.repository }}@${{ steps.version.outputs.new_version }}/custom-lightbox.js"
-          
-          echo ""
-          echo "✅ Cache purge completed!"
-          echo ""
-          echo "🚀 New version: ${{ steps.version.outputs.new_version }}"
-          echo "🔗 Use: https://cdn.jsdelivr.net/gh/${{ github.repository }}@${{ steps.version.outputs.new_version }}/custom-lightbox.js"
-          echo "🔗 Or: https://cdn.jsdelivr.net/gh/${{ github.repository }}@main/custom-lightbox.js"
+          echo "✅ All files purged!"
+          echo "🔗 Updated URL: https://cdn.jsdelivr.net/gh/${{ github.repository }}@main/custom-lightbox.js"
 
-      - name: Create release
-        uses: actions/github-script@v6
-        with:
-          script: |
-            github.rest.repos.createCommitComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              commit_sha: context.sha,
-              body: `🚀 **Auto-versioned to ${{ steps.version.outputs.new_version }}**
-              
-              ✅ JSDeliver cache purged!
-              
-              **Use one of these URLs:**
-              - Latest: \`https://cdn.jsdelivr.net/gh/${{ github.repository }}@main/custom-lightbox.js\`
-              - Versioned: \`https://cdn.jsdelivr.net/gh/${{ github.repository }}@${{ steps.version.outputs.new_version }}/custom-lightbox.js\`
-              
-              Cache will be updated within 5-10 minutes.`
-            })
+      - name: Verify cache purge
+        run: |
+          echo "⏳ Waiting 30 seconds for cache to update..."
+          sleep 30
+          
+          echo "🔍 Checking if cache is updated..."
+          RESPONSE=$(curl -s -I "https://cdn.jsdelivr.net/gh/${{ github.repository }}@main/custom-lightbox.js")
+          echo "Response headers:"
+          echo "$RESPONSE"
