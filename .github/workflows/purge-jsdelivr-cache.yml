@@ -13,7 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          fetch-depth: 2
+          fetch-depth: 0  # Fetch full history to ensure we have all tags
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Get changed files
@@ -37,6 +37,9 @@ jobs:
       - name: Get current version and create new one
         id: version
         run: |
+          # Fetch all tags to ensure we have the latest
+          git fetch --tags
+          
           LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
           echo "Latest tag: $LATEST_TAG"
           
@@ -53,14 +56,37 @@ jobs:
           echo "New version will be: $NEW_VERSION"
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
 
-      - name: Create new tag
+      - name: Check if tag exists and create new tag
+        id: create-tag
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag ${{ steps.version.outputs.new_version }}
-          git push origin ${{ steps.version.outputs.new_version }}
+          NEW_VERSION="${{ steps.version.outputs.new_version }}"
+          
+          # Check if tag already exists locally or remotely
+          if git show-ref --tags --verify --quiet "refs/tags/$NEW_VERSION" 2>/dev/null; then
+            echo "Tag $NEW_VERSION already exists locally"
+            TAG_EXISTS=true
+          elif git ls-remote --tags origin | grep -q "refs/tags/$NEW_VERSION$"; then
+            echo "Tag $NEW_VERSION already exists on remote"
+            TAG_EXISTS=true
+          else
+            echo "Tag $NEW_VERSION does not exist, creating..."
+            TAG_EXISTS=false
+          fi
+          
+          if [ "$TAG_EXISTS" = false ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git tag $NEW_VERSION
+            git push origin $NEW_VERSION
+            echo "tag_created=true" >> $GITHUB_OUTPUT
+            echo "✅ Tag $NEW_VERSION created and pushed successfully"
+          else
+            echo "tag_created=false" >> $GITHUB_OUTPUT
+            echo "ℹ️ Tag $NEW_VERSION already exists, skipping creation"
+          fi
 
       - name: Wait for tag to propagate
+        if: steps.create-tag.outputs.tag_created == 'true'
         run: sleep 10
 
       - name: Purge JSDeliver Cache for All Changed Files
@@ -112,7 +138,7 @@ jobs:
           
           echo ""
           echo "✅ All cache purge completed!"
-          echo "🚀 New version: ${{ steps.version.outputs.new_version }}"
+          echo "🚀 Version: ${{ steps.version.outputs.new_version }}"
 
       - name: Generate file URLs for comment
         id: urls
@@ -152,6 +178,7 @@ jobs:
           FILE_URLS: ${{ steps.urls.outputs.file_urls }}
           REPO_OWNER: ${{ github.repository_owner }}
           REPO_NAME: ${{ github.repository }}
+          TAG_CREATED: ${{ steps.create-tag.outputs.tag_created }}
         with:
           script: |
             const newVersion = process.env.NEW_VERSION;
@@ -159,17 +186,20 @@ jobs:
             const fileUrls = process.env.FILE_URLS;
             const repoOwner = process.env.REPO_OWNER;
             const repoName = process.env.REPO_NAME;
+            const tagCreated = process.env.TAG_CREATED;
             
             let bodyContent;
             
             if (!changedFiles || changedFiles.trim() === "") {
               bodyContent = `🚀 **Auto-versioned to ${newVersion}**
               
-              ℹ️ No JS/CSS files were changed in this commit.`;
+              ℹ️ No JS/CSS files were changed in this commit.
+              ${tagCreated === 'false' ? '\n⚠️ Tag already existed, no new tag created.' : ''}`;
             } else {
               bodyContent = `🚀 **Auto-versioned to ${newVersion}**
               
               ✅ JSDeliver cache purged for all changed files!
+              ${tagCreated === 'false' ? '\n⚠️ Tag already existed, but cache was still purged.' : ''}
               
               **Changed files and their URLs:**
               ${fileUrls}
