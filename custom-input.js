@@ -1,3 +1,4 @@
+// ...
 document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('[input]').forEach(wrapper => {
     const placeholderText = wrapper.getAttribute('placeholder-text');
