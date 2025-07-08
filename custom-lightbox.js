@@ -73,6 +73,13 @@ function initializeGLightbox() {
           draggable: false,
           touchNavigation: false,
           keyboardNavigation: false,
+          onOpen: function() {
+              setTimeout(() => {
+                  document.querySelectorAll('#glightbox-slider label[for]').forEach(label => {
+                      label.style.pointerEvents = 'auto';
+                  });
+              }, 100);
+          },
           onClose: function() {
             window.currentLightbox = null;
           }
