@@ -66,12 +66,13 @@ function initializeGLightbox() {
               height: 'auto'
             }
           ],
-          touchNavigation: true,
           loop: false,
           autoplayVideos: true,
           closeButton: false,
           arrows: false,
           draggable: false,
+          touchNavigation: false,
+          keyboardNavigation: false,
           onClose: function() {
             window.currentLightbox = null;
           }
