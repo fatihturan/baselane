@@ -38,7 +38,7 @@ function initializeGLightbox() {
   // Global event delegation for close buttons
   document.addEventListener('click', function(e) {
     // Check if clicked element is a close button
-    if (e.target.closest('.popup__close-button') || e.target.closest('.popup-close')) {
+    if (e.target.closest('[icon-button]') || e.target.closest('.popup__close-button') || e.target.closest('.icon-button')) {
       // Check if we're inside a glightbox
       if (e.target.closest('.glightbox-container')) {
         e.preventDefault();
@@ -47,13 +47,6 @@ function initializeGLightbox() {
         }
       }
     }
-  });
-
-  // Prevent default href behavior for all .lightbox elements
-  document.querySelectorAll('.lightbox').forEach(el => {
-    el.addEventListener('click', function (e) {
-      e.preventDefault();
-    });
   });
 
   // Delegate click events manually for elements using data-popup-target
