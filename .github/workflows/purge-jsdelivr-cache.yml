@@ -157,8 +157,8 @@ jobs:
             if [ ! -z "$file" ]; then
               URL_LIST="$URL_LIST
               **$file:**
-              - Latest: \`https://cdn.jsdelivr.net/gh/${{ github.repository }}@main/$file\`
-              - Versioned: \`https://cdn.jsdelivr.net/gh/${{ github.repository }}@${{ steps.version.outputs.new_version }}/$file\`
+              - Latest: https://cdn.jsdelivr.net/gh/${{ github.repository }}@main/$file
+              - Versioned: https://cdn.jsdelivr.net/gh/${{ github.repository }}@${{ steps.version.outputs.new_version }}/$file
               "
             fi
           done
@@ -205,8 +205,8 @@ jobs:
               ${fileUrls}
               
               **Alternative CDNs:**
-              - GitHub Pages: \`https://${repoOwner}.github.io/baselane/[filename]\`
-              - Statically: \`https://cdn.statically.io/gh/${repoName}/main/[filename]\`
+              - GitHub Pages: https://${repoOwner}.github.io/baselane/[filename]
+              - Statically: https://cdn.statically.io/gh/${repoName}/main/[filename]
               
               💡 **Tip:** Replace [filename] with your actual file name.
               
