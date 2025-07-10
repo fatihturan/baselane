@@ -7,6 +7,9 @@ var streetNumber = "";
 var address = "";
 var country = "";
 
+// Store autocomplete instances to clean them up properly
+let autocompleteInstances = new Map();
+
 // Helper function to get city from address components
 function getCity(components_by_type, addressType) {
   if (addressType == "locality") {
@@ -144,9 +147,32 @@ function initializePopupAddressAutocomplete() {
   
   const addressInput = popupContainer.querySelector('.obie-address');
   
-  if (!addressInput || addressInput.getAttribute('data-autocomplete-initialized')) {
+  if (!addressInput) {
     return;
   }
+  
+  // Get unique identifier for this input
+  const inputId = addressInput.id || 'popup-address-' + Date.now();
+  if (!addressInput.id) {
+    addressInput.id = inputId;
+  }
+  
+  // Clean up existing autocomplete instance for this input if it exists
+  if (autocompleteInstances.has(inputId)) {
+    try {
+      // Clear existing autocomplete
+      const existingAutocomplete = autocompleteInstances.get(inputId);
+      if (existingAutocomplete && typeof existingAutocomplete.unbindAll === 'function') {
+        existingAutocomplete.unbindAll();
+      }
+      autocompleteInstances.delete(inputId);
+    } catch (error) {
+      console.warn('Error cleaning up existing autocomplete:', error);
+    }
+  }
+  
+  // Remove the initialized attribute to allow re-initialization
+  addressInput.removeAttribute('data-autocomplete-initialized');
   
   loadGoogleMapsAPI().then(() => {
     // Double check that everything is loaded
@@ -154,10 +180,14 @@ function initializePopupAddressAutocomplete() {
       throw new Error('Google Maps Places API not available');
     }
     
+    // Create new autocomplete instance
     const autocomplete = new google.maps.places.Autocomplete(addressInput, {
       types: ['address'],
       componentRestrictions: { country: 'us' }
     });
+    
+    // Store the instance for later cleanup
+    autocompleteInstances.set(inputId, autocomplete);
     
     // Enhanced place_changed listener with address parsing
     autocomplete.addListener('place_changed', function() {
@@ -195,10 +225,28 @@ function initializePopupAddressAutocomplete() {
       document.head.appendChild(style);
     }
     
+    // Mark as initialized
     addressInput.setAttribute('data-autocomplete-initialized', 'true');
+    
+    console.log('Autocomplete initialized for input:', inputId);
+    
   }).catch(error => {
     console.error('Google Maps API failed to load:', error);
   });
+}
+
+// Function to clean up autocomplete instances when popup closes
+function cleanupAutocompleteInstances() {
+  autocompleteInstances.forEach((autocomplete, inputId) => {
+    try {
+      if (autocomplete && typeof autocomplete.unbindAll === 'function') {
+        autocomplete.unbindAll();
+      }
+    } catch (error) {
+      console.warn('Error cleaning up autocomplete instance:', inputId, error);
+    }
+  });
+  autocompleteInstances.clear();
 }
 
 // Obie form validation for Webflow
@@ -554,15 +602,39 @@ if (document.readyState !== 'loading') {
   setupRealTimeValidation();
 }
 
+// Enhanced MutationObserver to handle popup opening/closing
 const observer = new MutationObserver(function(mutations) {
   mutations.forEach(function(mutation) {
     mutation.addedNodes.forEach(function(node) {
-      if (node.nodeType === 1 && node.querySelector && node.querySelector('[p-obie__form]')) {
-        setTimeout(function() {
-          setupFormSubmission();
-          setupRealTimeValidation();
-          initializePopupAddressAutocomplete();
-        }, 100);
+      if (node.nodeType === 1) {
+        // Check if a popup with obie form was added
+        if (node.querySelector && node.querySelector('[p-obie__form]')) {
+          setTimeout(function() {
+            setupFormSubmission();
+            setupRealTimeValidation();
+            initializePopupAddressAutocomplete();
+          }, 100);
+        }
+        
+        // Check if this is a glightbox container (popup system)
+        if (node.id === 'glightbox-body' || 
+            (node.classList && node.classList.contains('glightbox-container'))) {
+          setTimeout(function() {
+            initializePopupAddressAutocomplete();
+          }, 200);
+        }
+      }
+    });
+    
+    // Handle removed nodes (popup closing)
+    mutation.removedNodes.forEach(function(node) {
+      if (node.nodeType === 1) {
+        // Check if a popup was removed
+        if (node.id === 'glightbox-body' || 
+            (node.classList && node.classList.contains('glightbox-container'))) {
+          // Clean up autocomplete instances when popup closes
+          setTimeout(cleanupAutocompleteInstances, 100);
+        }
       }
     });
   });
@@ -573,22 +645,60 @@ observer.observe(document.body, {
   subtree: true
 });
 
-setInterval(function() {
-    const popup = document.querySelector('#glightbox-slider');
-    if (popup) {
-        const radios = popup.querySelectorAll('input[type="radio"][id]');
-        radios.forEach(function(radio) {
-            const label = popup.querySelector('label[for="' + radio.id + '"]');
-            if (label && !label.dataset.fixed) {
-                label.dataset.fixed = 'true';
-                label.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    radio.checked = true;
-                    radio.dispatchEvent(new Event('change', { bubbles: true }));
-                });
-            }
-        });
+// Also listen for popup events if GLightbox is available
+document.addEventListener('DOMContentLoaded', function() {
+  // Check if GLightbox is available and hook into its events
+  if (typeof GLightbox !== 'undefined') {
+    // Override GLightbox open method to initialize autocomplete
+    const originalOpen = GLightbox.prototype.open;
+    if (originalOpen) {
+      GLightbox.prototype.open = function() {
+        const result = originalOpen.apply(this, arguments);
+        setTimeout(initializePopupAddressAutocomplete, 300);
+        return result;
+      };
     }
+    
+    // Override GLightbox close method to cleanup autocomplete
+    const originalClose = GLightbox.prototype.close;
+    if (originalClose) {
+      GLightbox.prototype.close = function() {
+        cleanupAutocompleteInstances();
+        return originalClose.apply(this, arguments);
+      };
+    }
+  }
+});
+
+// Enhanced interval check for popup changes
+let lastPopupState = null;
+setInterval(function() {
+  const popup = document.querySelector('#glightbox-slider');
+  const currentPopupState = popup ? popup.innerHTML.length : 0;
+  
+  if (popup && currentPopupState !== lastPopupState) {
+    // Popup content changed, reinitialize autocomplete
+    setTimeout(initializePopupAddressAutocomplete, 100);
+    lastPopupState = currentPopupState;
+    
+    // Handle radio buttons as before
+    const radios = popup.querySelectorAll('input[type="radio"][id]');
+    radios.forEach(function(radio) {
+      const label = popup.querySelector('label[for="' + radio.id + '"]');
+      if (label && !label.dataset.fixed) {
+        label.dataset.fixed = 'true';
+        label.addEventListener('click', function(e) {
+          e.preventDefault();
+          radio.checked = true;
+          radio.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+      }
+    });
+  } else if (!popup && lastPopupState !== null) {
+    // Popup was closed
+    cleanupAutocompleteInstances();
+    lastPopupState = null;
+  }
 }, 500);
 
 // Utility function to get current parsed address components
