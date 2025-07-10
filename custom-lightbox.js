@@ -58,14 +58,14 @@ function initializeGLightbox() {
       const inlineElement = target && document.querySelector(target);
 
       if (inlineElement) {
+        // Close any existing lightbox first
+        if (window.currentLightbox) {
+          window.currentLightbox.close();
+        }
+
+        // Create a completely new GLightbox instance for this specific popup only
         window.currentLightbox = GLightbox({
-          elements: [
-            {
-              content: inlineElement.outerHTML,
-              width: 'auto',
-              height: 'auto'
-            }
-          ],
+          selector: false, // Disable automatic selector scanning to prevent grouping
           loop: false,
           autoplayVideos: true,
           closeButton: false,
@@ -78,6 +78,14 @@ function initializeGLightbox() {
           }
         });
 
+        // Set elements with only this specific content
+        window.currentLightbox.setElements([{
+          content: inlineElement.outerHTML,
+          width: 'auto',
+          height: 'auto'
+        }]);
+
+        // Open the lightbox
         window.currentLightbox.open();
       } else {
         console.warn(`No inline content found for selector: ${target}`);
