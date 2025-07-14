@@ -4,7 +4,7 @@ document.addEventListener("DOMContentLoaded", function () {
     document.querySelectorAll('a[href]:not(.disable-url-carrying):not(a[rel="noopener"]):not(a[href^="#"])')
         .forEach(function (link) {
         var paramsObject = new URLSearchParams(params);
-        paramsObject.delete("s");
+        paramsObject.delete("query");
         params = "?" + paramsObject.toString();
 
         // Check if params is not empty
