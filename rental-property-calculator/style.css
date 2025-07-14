@@ -2474,3 +2474,138 @@ li.list-group-item {
 	margin-top: 0;
 	z-index: 9999999;
 }
+
+	.container-fluid {
+		padding: 0;
+		overflow: hidden;
+	}
+
+	.row {
+		margin: 0;
+	}
+
+	.pdr40 {
+		padding-left: 0;
+	}
+
+	.cashloanwrap {
+		padding: 0;
+	}
+
+	.pricebox {
+		max-width: 778px;
+	}
+
+	div#rental-mortgage-calculator img {
+		display: inline-block;
+	}
+
+	#break_even {
+		max-width: 780px;
+	}
+
+
+	@media (max-width: 768px) {
+
+		.tabcontent12 {
+			padding: 10px;
+			text-align: left;
+		}
+
+		ul.rounded-0.outmonthly.cashflow.pl {
+			padding: 10px;
+		}
+
+		.mhead h1 {
+			line-height: unset;
+		}
+
+		.rgttxt p {
+			margin: 15px 0;
+		}
+
+		#left-calc-wrapper {
+			display: none;
+		}
+	}
+
+	#cashflowLegendLightBlue {
+		width: 30px;
+		height: 20px;
+		border-top-left-radius: 5px;
+		border-bottom-left-radius: 5px;
+		margin-right: -5px;
+		background-color: #B3D1FF;
+		display: inline-block;
+		margin-left: -15px;
+	}
+
+	#cashflowLegendDarkBlue {
+		width: 30px;
+		height: 20px;
+		border-top-right-radius: 5px;
+		border-bottom-right-radius: 5px;
+		background-color: rgb(8, 102, 255);
+		display: inline-block;
+		margin-left: 0px;
+	}
+
+	#cashflowLegendDarkBlue:hover {
+		background-color: rgb(8, 102, 255);
+	}
+
+	#cashflowLegendYellow {
+		width: 30px;
+		height: 20px;
+		border-radius: 5px;
+		background-color: rgb(241, 194, 65);
+		display: inline-block;
+	}
+
+	#cashflowLegendGreen {
+		width: 30px;
+		height: 20px;
+		border-radius: 5px;
+		background-color: rgb(143, 191, 135);
+		display: inline-block;
+	}
+
+	.legend-tooltip {
+		position: relative;
+		/* making the .tooltip span a container for the tooltip text */
+		margin-top: -5px;
+		margin-left: 55px;
+		font-size: 13px;
+		/*border-bottom:1px dashed #000; /* little indicater to indicate it's hoverable */
+	}
+
+	.legend-tooltip:before {
+		content: attr(data-text);
+		/* here's the magic */
+		position: absolute;
+
+		/* vertically center */
+		top: -90%;
+		transform: translateY(-80%);
+
+		/* move to right */
+		left: -70px;
+		margin-left: 5px;
+		/* and add a small left margin */
+
+		/* basic styles */
+		width: 160px;
+		padding: 3px;
+		border-radius: 5px;
+		/* 		background:rgb(3, 39, 101); */
+		background: rgb(27, 61, 116);
+		color: #fff;
+		text-align: center;
+
+		display: none;
+		/* hide by default */
+	}
+
+	.legend-tooltip:hover:before {
+		display: block;
+	}
