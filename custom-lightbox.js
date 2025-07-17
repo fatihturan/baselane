@@ -49,46 +49,107 @@ function initializeGLightbox() {
     }
   });
 
-  // Delegate click events manually for elements using data-popup-target
-  document.querySelectorAll('.lightbox[data-popup-target]').forEach(el => {
+  // Handle ALL .lightbox elements
+  document.querySelectorAll('.lightbox').forEach(el => {
     el.addEventListener('click', function (e) {
       e.preventDefault();
 
-      const target = el.getAttribute('data-popup-target');
-      const inlineElement = target && document.querySelector(target);
+      const popupTarget = el.getAttribute('data-popup-target');
+      
+      // If data-popup-target exists, use inline content
+      if (popupTarget) {
+        const inlineElement = document.querySelector(popupTarget);
 
-      if (inlineElement) {
-        // Close any existing lightbox first
-        if (window.currentLightbox) {
-          window.currentLightbox.close();
-        }
-
-        // Create a completely new GLightbox instance for this specific popup only
-        window.currentLightbox = GLightbox({
-          selector: false, // Disable automatic selector scanning to prevent grouping
-          loop: false,
-          autoplayVideos: true,
-          closeButton: false,
-          arrows: false,
-          draggable: false,
-          touchNavigation: false,
-          keyboardNavigation: false,
-          onClose: function() {
-            window.currentLightbox = null;
+        if (inlineElement) {
+          // Close any existing lightbox first
+          if (window.currentLightbox) {
+            window.currentLightbox.close();
           }
-        });
 
-        // Set elements with only this specific content
-        window.currentLightbox.setElements([{
-          content: inlineElement.outerHTML,
-          width: 'auto',
-          height: 'auto'
-        }]);
+          // Create a completely new GLightbox instance for this specific popup only
+          window.currentLightbox = GLightbox({
+            selector: false, // Disable automatic selector scanning to prevent grouping
+            loop: false,
+            autoplayVideos: true,
+            closeButton: false,
+            arrows: false,
+            draggable: false,
+            touchNavigation: false,
+            keyboardNavigation: false,
+            onClose: function() {
+              window.currentLightbox = null;
+            }
+          });
 
-        // Open the lightbox
-        window.currentLightbox.open();
+          // Set elements with only this specific content
+          window.currentLightbox.setElements([{
+            content: inlineElement.outerHTML,
+            width: 'auto',
+            height: 'auto'
+          }]);
+
+          // Open the lightbox
+          window.currentLightbox.open();
+        } else {
+          console.warn(`No inline content found for selector: ${popupTarget}`);
+        }
       } else {
-        console.warn(`No inline content found for selector: ${target}`);
+        // If no data-popup-target, use href attribute
+        const href = el.getAttribute('href');
+        
+        if (href) {
+          // Close any existing lightbox first
+          if (window.currentLightbox) {
+            window.currentLightbox.close();
+          }
+
+          // Create GLightbox instance for href content
+          window.currentLightbox = GLightbox({
+            selector: false,
+            loop: false,
+            autoplayVideos: true,
+            closeButton: false,
+            arrows: false,
+            draggable: false,
+            touchNavigation: false,
+            keyboardNavigation: false,
+            onClose: function() {
+              window.currentLightbox = null;
+            }
+          });
+
+          // Determine content type based on href
+          let contentConfig = {
+            href: href,
+            width: 'auto',
+            height: 'auto'
+          };
+
+          // Check if it's an image
+          if (/\.(jpg|jpeg|png|gif|webp|svg)$/i.test(href)) {
+            contentConfig.type = 'image';
+          }
+          // Check if it's a video
+          else if (/\.(mp4|webm|ogg)$/i.test(href)) {
+            contentConfig.type = 'video';
+          }
+          // Check if it's a YouTube or Vimeo link
+          else if (/youtube\.com|youtu\.be|vimeo\.com/i.test(href)) {
+            contentConfig.type = 'video';
+          }
+          // Default to iframe for other links
+          else {
+            contentConfig.type = 'iframe';
+          }
+
+          // Set elements with href content
+          window.currentLightbox.setElements([contentConfig]);
+
+          // Open the lightbox
+          window.currentLightbox.open();
+        } else {
+          console.warn('No href attribute found on lightbox element');
+        }
       }
     });
   });
