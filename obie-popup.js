@@ -126,7 +126,7 @@ function loadGoogleMapsAPI() {
     };
     
     const script = document.createElement('script');
-    script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyAPXiZqQFEjY4PEkY8vu22hVCFQppGTW4Q&libraries=places&callback=initGoogleMapsCallback';
+    script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyAQQgvUnzjxrE1aUWS3IReG4io5CTFLHHw&libraries=places&callback=initGoogleMapsCallback';
     script.async = true;
     script.defer = true;
     
