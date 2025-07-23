@@ -221,12 +221,11 @@ function getDomainForCookies() {
         return 'baselane-main-website.webflow.io';
     }
     
-    // Fallback for any other webflow.io domains or unknown domains
-    if (hostname.includes('webflow.io')) {
-        return hostname; // Use the exact hostname
+    if (hostname === 'baselane-design-system.design.webflow.com') {
+        return 'baselane-design-system.design.webflow.com';
     }
     
-    // Default fallback
+    // Default fallback for any other domains (no Webflow fallback)
     return hostname;
 }
 
