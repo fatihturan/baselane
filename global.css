@@ -26,8 +26,12 @@ input[type=number] {
 	overflow: unset;
 }
 
-.w-richtext ul li {
+.w-richtext ul li, 
+.w-richtext ol li {
 	margin-bottom: 16px;
+}
+
+.w-richtext ul li {
 	list-style-type: "•";
 	padding-inline-start: 0.5ch;
 }
