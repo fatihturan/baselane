@@ -26,13 +26,13 @@ input[type=number] {
 	overflow: unset;
 }
 
-.w-richtext li {
+.w-richtext ul li {
 	margin-bottom: 16px;
 	list-style-type: "•";
 	padding-inline-start: 0.5ch;
 }
 
-.w-richtext li::marker {
+.w-richtext ul li::marker {
 	position: relative;
 	font-size: 32px;
 }
