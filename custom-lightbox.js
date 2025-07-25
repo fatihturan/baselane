@@ -74,8 +74,6 @@ function initializeGLightbox() {
             closeButton: false,
             arrows: false,
             draggable: false,
-            touchNavigation: false,
-            keyboardNavigation: false,
             onClose: function() {
               window.currentLightbox = null;
             }
@@ -111,8 +109,6 @@ function initializeGLightbox() {
             closeButton: false,
             arrows: false,
             draggable: false,
-            touchNavigation: false,
-            keyboardNavigation: false,
             onClose: function() {
               window.currentLightbox = null;
             }
