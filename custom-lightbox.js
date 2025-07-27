@@ -106,12 +106,8 @@ function initializeGLightbox() {
             selector: false,
             loop: false,
             autoplayVideos: true,
-            closeButton: false,
             arrows: false,
             draggable: false,
-            onClose: function() {
-              window.currentLightbox = null;
-            }
           });
 
           // Determine content type based on href
