@@ -24,6 +24,7 @@ input[type=number] {
 
 .w-richtext ol, .w-richtext ul {
 	overflow: unset;
+	padding-left: 0;
 }
 
 .w-richtext ul li, 
