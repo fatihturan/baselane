@@ -32,13 +32,11 @@ input[type=number] {
 }
 
 .w-richtext ul li {
-	list-style-type: "•";
-	padding-inline-start: 0.5ch;
+	padding-inline-start: 8px;
 }
 
 .w-richtext ul li::marker {
-	position: relative;
-	font-size: 32px;
+	content: "•";
 }
 
 .w-richtext-figure-type-image img {
