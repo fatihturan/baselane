@@ -164,6 +164,12 @@ document.addEventListener('DOMContentLoaded', function() {
                         sfdc_Lead_Source: customSfdc || window.global_sfdc_Lead_Source,
                     };
                     
+                    // Check for additional props from global variable
+                    const additionalPropsVar = el.getAttribute('data-additional-props');
+                    if (additionalPropsVar && window[additionalPropsVar] && typeof window[additionalPropsVar] === 'object') {
+                        Object.assign(analyticsData, window[additionalPropsVar]);
+                    }
+                    
                     if (gclid) {
                         analyticsData.gclid = gclid;
                     }
