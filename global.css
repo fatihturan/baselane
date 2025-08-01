@@ -32,12 +32,12 @@ input[type=number] {
 	margin-bottom: 16px;
 }
 
-.w-richtext ul li {
+.w-richtext:not([data-checklist="true"]) ul li {
 	margin-inline-start: 16px;
 	padding-inline-start: 8px;
 }
 
-.w-richtext ul li::marker {
+.w-richtext:not([data-checklist="true"]) ul li::marker {
 	content: "•";
 }
 
