@@ -23,17 +23,17 @@ input[type=number] {
 }
 
 .w-richtext ol, .w-richtext ul {
-	overflow: unset;
 	padding-left: 0;
-}
-
-.w-richtext ul li, 
-.w-richtext ol li {
 	margin-bottom: 16px;
 }
 
+.w-richtext ol li {
+	margin-inline-start: 40px;
+	padding-inline-start: 8px;	
+}
+
 .w-richtext:not([data-checklist="true"]) ul li {
-	margin-inline-start: 16px;
+	margin-inline-start: 24px;
 	padding-inline-start: 8px;
 }
 
