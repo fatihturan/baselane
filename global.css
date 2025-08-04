@@ -78,5 +78,5 @@ input[type=number] {
 }
 
 .goverlay {
-	background: rgba(11, 32, 51, .8);
+	background: rgba(11, 32, 51, .8) !important;
 }
