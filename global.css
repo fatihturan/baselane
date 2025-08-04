@@ -76,3 +76,7 @@ input[type=number] {
 	background: url(https://cdn.prod.website-files.com/68302b3f2baf68e6d1ecf558/68302b3f2baf68e6d1ecf6d2_icon-checkmark-24px-white.svg) no-repeat;
 	list-style: none;
 }
+
+.goverlay {
+	background: rgba(11, 32, 51, .8);
+}
