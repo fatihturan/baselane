@@ -72,7 +72,7 @@ input[type=number] {
 
 [data-checklist="true"] ul li {
 	padding-left: 32px;
-  	min-height: 24px;
+  min-height: 24px;
 	background: url(https://cdn.prod.website-files.com/68302b3f2baf68e6d1ecf558/68302b3f2baf68e6d1ecf6d2_icon-checkmark-24px-white.svg) no-repeat;
 	list-style: none;
 }

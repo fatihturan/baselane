@@ -5,6 +5,7 @@ document.addEventListener("DOMContentLoaded", function () {
         .forEach(function (link) {
         var paramsObject = new URLSearchParams(params);
         paramsObject.delete("query");
+        paramsObject.delete("2ca20d76_page"); // Remove the Webflow's pagination query parameter
         params = "?" + paramsObject.toString();
 
         // Check if params is not empty
