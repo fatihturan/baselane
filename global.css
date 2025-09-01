@@ -7,12 +7,54 @@
   text-overflow:ellipsis
 }
 
-:where([input], [select]):has([required]) label {
+:where([input], [select]):has([required]) [label__text] {
 	&:after {
 		content: "*";
 		margin-left: 4px;
-		color: red;
+		font-size: 15px;
+		color: #E34141;
 	}
+}
+
+[label]:has([tooltip-text]) [tooltip-text]::before {
+	content: attr(tooltip-text);
+	position: absolute;
+	z-index: 1000;
+	bottom: 125%;
+	padding: 16px 8px;
+	transform: translateX(-4%);
+	background-color: #333;
+	color: white;
+	border-radius: 6px;
+	font-size: 14px;
+	font-weight: normal;
+	white-space: nowrap;
+	word-wrap: break-word;
+	opacity: 0;
+	visibility: hidden;
+	transition: opacity 0.2s, visibility 0.2s;
+}
+
+[label]:has([tooltip-text]) [tooltip-text]::after {
+	content: "";
+	position: absolute;
+	bottom: 100%;
+	left: 50%;
+	transform: translateX(-50%);
+	width: 0;
+	height: 0;
+	border-left: 6px solid transparent;
+	border-right: 6px solid transparent;
+	border-top: 4px solid #333;
+	opacity: 0;
+	visibility: hidden;
+	transition: opacity 0.2s, visibility 0.2s;
+}
+
+[label]:has([tooltip-text]) [tooltip-text]:hover::before,
+[label]:has([tooltip-text]) [tooltip-text]:hover::after {
+	opacity: 1;
+	visibility: visible;
 }
 
 input::-webkit-outer-spin-button,
