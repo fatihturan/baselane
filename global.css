@@ -3,6 +3,18 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+[placeholder] {
+  text-overflow:ellipsis
+}
+
+:where([input], [select]):has([required]) label {
+	&:after {
+		content: "*";
+		margin-left: 4px;
+		color: red;
+	}
+}
+
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
   -webkit-appearance: none;
@@ -13,8 +25,48 @@ input[type=number] {
   -moz-appearance: textfield;
 }
 
-[placeholder] {
-  text-overflow:ellipsis
+[input][disable="true"] [input__field] {
+	border-color: var(--_components---fields--text_field--underline_disable, var(--baselane----design-system-a29a_components---fields--text_field--underline_disable));
+}
+
+[input][error="true"] [input__field] {
+	border-color: var(--_components---fields--text_field--underline_error, var(--baselane----design-system-a29a_components---fields--text_field--underline_error));
+}
+
+[input][error="true"]:after {
+	content: attr(error-message);
+  color: var(--_semantic---text--functional--error, var(--baselane----design-system-a29a_semantic---text--functional--error));
+  font-size: 14px;
+  font-weight: 100;
+  line-height: 20px;
+}
+
+[select]:is([data-wf--select--select-theme="white"], [data-wf--baselane----design-system-a29a--select--select-theme="white"]) [select__field] {
+  background: url("https://cdn.prod.website-files.com/68302b3f2baf68e6d1ecf558/68302b3f2baf68e6d1ecf6ea_icon-dropdown-down-24px-white.svg") no-repeat right center !important;
+}
+
+[select]:is([data-wf--select--select-theme="midnight"], [data-wf--baselane----design-system-a29a--select--select-theme="midnight"]) [select__field] {
+  background: url("https://cdn.prod.website-files.com/68302b3f2baf68e6d1ecf558/68302b3f2baf68e6d1ecf7ef_icon-dropdown-down-24px-white.svg") no-repeat right center !important;
+}
+
+[select][disable="true"] [select__field] {
+	border-color: var(--_components---fields--text_field--underline_disable, var(--baselane----design-system-a29a_components---fields--text_field--underline_disable));
+}
+
+[select][error="true"] [select__field] {
+	border-color: var(--_components---fields--text_field--underline_error, var(--baselane----design-system-a29a_components---fields--text_field--underline_error));
+}
+
+[select][error="true"]:after {
+	content: attr(error-message);
+  color: var(--_semantic---text--functional--error, var(--baselane----design-system-a29a_semantic---text--functional--error));
+  font-size: 14px;
+  font-weight: 100;
+  line-height: 20px;
+}
+
+[select__field].placeholder {
+	color: var(--_components---fields--input_default, var(--baselane----design-system-a29a_components---fields--input_default));
 }
   
 .w-container:before, .w-container:after,
