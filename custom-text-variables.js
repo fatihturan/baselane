@@ -14,9 +14,9 @@ const acfData = {
     "fdic_short": "$3M",
     "fdic_long": "$3,000,000",
     "fdic_insurance_up": "$250,000",
-    "apytier1": "1.46%",
-    "apytier2": "2.20%",
-    "apytier3": "2.55%"
+    "apytier1": "1.81%",
+    "apytier2": "2.55%",
+    "apytier3": "2.91%"
 };
 
 // Update the dynamic values
