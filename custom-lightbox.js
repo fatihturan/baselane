@@ -1,8 +1,8 @@
-// Check if there any .lightbox element exist first
 function checkAndLoadGLightbox() {
   const lightboxElements = document.querySelectorAll('.lightbox');
+  const autoOpenPopups = document.querySelectorAll('[popup][auto-open="true"]');
 
-  if (lightboxElements.length > 0) {
+  if (lightboxElements.length > 0 || autoOpenPopups.length > 0) {
     loadGLightboxScript();
   }
 }
@@ -30,16 +30,26 @@ function loadGLightboxScript() {
   document.head.appendChild(script);
 }
 
+function reinitializeWebflowIfFormExists() {
+  setTimeout(function() {
+    const glightboxContainer = document.querySelector('.glightbox-container');
+    if (glightboxContainer) {
+      const formInPopup = glightboxContainer.querySelector('form');
+      if (formInPopup && typeof Webflow !== 'undefined') {
+        Webflow.destroy();
+        Webflow.ready();
+      }
+    }
+  }, 100);
+}
+
 function initializeGLightbox() {
   if (!window.GLightbox) return;
 
   window.currentLightbox = null;
 
-  // Global event delegation for close buttons
   document.addEventListener('click', function(e) {
-    // Check if clicked element is a close button
     if (e.target.closest('[icon-button]') || e.target.closest('.popup__close-button') || e.target.closest('.icon-button')) {
-      // Check if we're inside a glightbox
       if (e.target.closest('.glightbox-container')) {
         e.preventDefault();
         if (currentLightbox) {
@@ -49,95 +59,87 @@ function initializeGLightbox() {
     }
   });
 
-  // Handle ALL .lightbox elements
   document.querySelectorAll('.lightbox').forEach(el => {
     el.addEventListener('click', function (e) {
       e.preventDefault();
 
       const popupTarget = el.getAttribute('data-popup-target');
       
-      // If data-popup-target exists, use inline content
       if (popupTarget) {
         const inlineElement = document.querySelector(popupTarget);
 
         if (inlineElement) {
-          // Close any existing lightbox first
           if (window.currentLightbox) {
             window.currentLightbox.close();
           }
 
-          // Create a completely new GLightbox instance for this specific popup only
           window.currentLightbox = GLightbox({
-            selector: false, // Disable automatic selector scanning to prevent grouping
+            selector: false,
             loop: false,
             autoplayVideos: true,
             closeButton: false,
             arrows: false,
             draggable: false,
+            onOpen: function() {
+              reinitializeWebflowIfFormExists();
+            },
             onClose: function() {
               window.currentLightbox = null;
             }
           });
 
-          // Set elements with only this specific content
           window.currentLightbox.setElements([{
             content: inlineElement.outerHTML,
             width: 'auto',
             height: 'auto'
           }]);
 
-          // Open the lightbox
           window.currentLightbox.open();
         } else {
           console.warn(`No inline content found for selector: ${popupTarget}`);
         }
       } else {
-        // If no data-popup-target, use href attribute
         const href = el.getAttribute('href');
         
         if (href) {
-          // Close any existing lightbox first
           if (window.currentLightbox) {
             window.currentLightbox.close();
           }
 
-          // Create GLightbox instance for href content
           window.currentLightbox = GLightbox({
             selector: false,
             loop: false,
             autoplayVideos: true,
             arrows: false,
             draggable: false,
+            onOpen: function() {
+              reinitializeWebflowIfFormExists();
+            },
+            onClose: function() {
+              window.currentLightbox = null;
+            }
           });
 
-          // Determine content type based on href
           let contentConfig = {
             href: href,
             width: 'auto',
             height: 'auto'
           };
 
-          // Check if it's an image
           if (/\.(jpg|jpeg|png|gif|webp|svg)$/i.test(href)) {
             contentConfig.type = 'image';
           }
-          // Check if it's a video
           else if (/\.(mp4|webm|ogg)$/i.test(href)) {
             contentConfig.type = 'video';
           }
-          // Check if it's a YouTube or Vimeo link
           else if (/youtube\.com|youtu\.be|vimeo\.com/i.test(href)) {
             contentConfig.type = 'video';
           }
-          // Default to iframe for other links
           else {
             contentConfig.type = 'iframe';
           }
 
-          // Set elements with href content
           window.currentLightbox.setElements([contentConfig]);
-
-          // Open the lightbox
           window.currentLightbox.open();
         } else {
           console.warn('No href attribute found on lightbox element');
@@ -147,21 +149,22 @@ function initializeGLightbox() {
   });
 }
 
-// Run the check when DOM is ready
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', checkAndLoadGLightbox);
+  document.addEventListener('DOMContentLoaded', () => {
+    checkAndLoadGLightbox();
+    initializeAutoOpenPopups();
+  });
 } else {
   checkAndLoadGLightbox();
+  initializeAutoOpenPopups();
 }
 
-// Optional: Re-check when new content is added dynamically
 function recheckLightbox() {
   checkAndLoadGLightbox();
 }
 
 window.recheckLightbox = recheckLightbox;
 
-// Global function to close lightbox
 function closeCurrentLightbox() {
   if (window.currentLightbox) {
     window.currentLightbox.close();
@@ -169,3 +172,109 @@ function closeCurrentLightbox() {
 }
 
 window.closeCurrentLightbox = closeCurrentLightbox;
+
+function checkAndInitAutoOpenPopups() {
+  const autoOpenPopups = document.querySelectorAll('[popup][auto-open="true"]');
+
+  autoOpenPopups.forEach(popup => {
+    const timeoutValue = popup.getAttribute('auto-open-timeout');
+    const timeout = timeoutValue ? parseInt(timeoutValue, 10) : 0;
+    const autoOpenUntilClicked = popup.getAttribute('auto-open-until-clicked');
+    const autoOpenForFirstTime = popup.getAttribute('auto-open-for-first-time-users');
+
+    if (autoOpenForFirstTime === 'true') {
+      const expiryDays = popup.getAttribute('first-time-use-expiry');
+      const expiryValue = expiryDays ? parseInt(expiryDays, 10) : 0;
+
+      const visitData = localStorage.getItem('popup-site-visited');
+
+      if (visitData) {
+        if (expiryValue > 0) {
+          try {
+            const visitInfo = JSON.parse(visitData);
+            const visitDate = new Date(visitInfo.timestamp);
+            const currentDate = new Date();
+            const daysDifference = Math.floor((currentDate - visitDate) / (1000 * 60 * 60 * 24));
+
+            if (daysDifference >= expiryValue) {
+              localStorage.removeItem('popup-site-visited');
+            } else {
+              return;
+            }
+          } catch (e) {
+            localStorage.removeItem('popup-site-visited');
+          }
+        } else {
+          return;
+        }
+      }
+
+      const visitInfo = {
+        timestamp: new Date().toISOString(),
+        visited: true
+      };
+      localStorage.setItem('popup-site-visited', JSON.stringify(visitInfo));
+    }
+
+    if (autoOpenUntilClicked) {
+      const elementsToWatch = document.querySelectorAll(autoOpenUntilClicked);
+      elementsToWatch.forEach(element => {
+        element.addEventListener('click', function() {
+          popup.setAttribute('data-clicked', 'true');
+        });
+      });
+    }
+
+    if (timeout > 0) {
+      setTimeout(() => {
+        if (window.currentLightbox) {
+          return;
+        }
+
+        if (popup.getAttribute('data-clicked') === 'true') {
+          return;
+        }
+
+        const popupWrapper = popup.querySelector('[popup__wrapper]');
+        if (popupWrapper) {
+          const popupContent = popupWrapper.outerHTML;
+
+          if (window.currentLightbox) {
+            window.currentLightbox.close();
+          }
+
+          window.currentLightbox = GLightbox({
+            selector: false,
+            loop: false,
+            autoplayVideos: true,
+            closeButton: false,
+            arrows: false,
+            draggable: false,
+            onOpen: function() {
+              reinitializeWebflowIfFormExists();
+            },
+            onClose: function() {
+              window.currentLightbox = null;
+            }
+          });
+
+          window.currentLightbox.setElements([{
+            content: popupContent,
+            width: 'auto',
+            height: 'auto'
+          }]);
+
+          window.currentLightbox.open();
+        }
+      }, timeout);
+    }
+  });
+}
+
+function initializeAutoOpenPopups() {
+  if (window.GLightbox) {
+    checkAndInitAutoOpenPopups();
+  } else {
+    setTimeout(initializeAutoOpenPopups, 100);
+  }
+}
