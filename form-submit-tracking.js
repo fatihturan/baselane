@@ -102,21 +102,21 @@ function collectMetadata(email) {
 // Function to populate hidden input fields with metadata
 function populateMetadataInputs(form, metadata) {
     const inputMappings = {
-        'email-form__metadata-full-url': metadata.fullurl,
-        'email-form__metadata-utm-source': metadata.utm_source,
-        'email-form__metadata-utm-medium': metadata.utm_medium,
-        'email-form__metadata-utm-campaign': metadata.utm_campaign,
-        'email-form__metadata-utm-funnel': metadata.utm_funnel,
-        'email-form__metadata-fbc': metadata.fbc,
-        'email-form__metadata-fbp': metadata.fbp,
-        'email-form__metadata-email': metadata.email,
-        'email-form__metadata-user-agent': metadata.user_agent,
-        'email-form__metadata-ip-address': metadata.ip_address,
-        'email-form__metadata-user-id': metadata.userId
+        'metadata-full-url': metadata.fullurl,
+        'metadata-utm-source': metadata.utm_source,
+        'metadata-utm-medium': metadata.utm_medium,
+        'metadata-utm-campaign': metadata.utm_campaign,
+        'metadata-utm-funnel': metadata.utm_funnel,
+        'metadata-fbc': metadata.fbc,
+        'metadata-fbp': metadata.fbp,
+        'metadata-email': metadata.email,
+        'metadata-user-agent': metadata.user_agent,
+        'metadata-ip-address': metadata.ip_address,
+        'metadata-user-id': metadata.userId
     };
     
-    for (const [className, value] of Object.entries(inputMappings)) {
-        const input = form.querySelector(`.${className}`);
+    for (const [name, value] of Object.entries(inputMappings)) {
+        const input = form.querySelector(`[name="${name}"]`);
         if (input && value !== null) {
             input.value = value;
         }
