@@ -1,44 +1,29 @@
 // Function to check if Segment analytics is properly working with retry mechanism
 function isSegmentAnalyticsWorking(maxAttempts = 3, attemptDelay = 500, callback) {
-    // console.log(`DEBUG: Checking if Segment analytics is working (attempt 1/${maxAttempts})`);
-    
     let currentAttempt = 1;
     
     function checkAnalytics() {
         try {
-            // Basic check if analytics object exists
             if (typeof analytics === 'undefined') {
-                // console.log(`DEBUG: Attempt ${currentAttempt}/${maxAttempts} - analytics object is undefined`);
                 retryOrFail();
                 return;
             }
             
-            // console.log(`DEBUG: Attempt ${currentAttempt}/${maxAttempts} - analytics object exists`);
-            
-            // Check for track method specifically
             if (typeof analytics.track !== 'function') {
-                // console.log(`DEBUG: Attempt ${currentAttempt}/${maxAttempts} - analytics.track is not a function`);
                 retryOrFail();
                 return;
             }
             
-            // console.log(`DEBUG: Attempt ${currentAttempt}/${maxAttempts} - analytics.track is a function`);
-            
-            // Additional check for Segment specific properties
-            // This is more likely to detect a stub/fake analytics object
             if (typeof analytics.initialize === 'function' && 
                 typeof analytics.identify === 'function' && 
                 typeof analytics.group === 'function' && 
                 typeof analytics.page === 'function') {
-                // console.log(`DEBUG: Attempt ${currentAttempt}/${maxAttempts} - All critical Segment methods exist`);
                 callback(true);
                 return;
             }
             
-            // console.log(`DEBUG: Attempt ${currentAttempt}/${maxAttempts} - Missing some critical Segment methods`);
             retryOrFail();
         } catch (e) {
-            // console.error(`DEBUG: Attempt ${currentAttempt}/${maxAttempts} - Error checking analytics:`, e);
             retryOrFail();
         }
     }
@@ -46,15 +31,12 @@ function isSegmentAnalyticsWorking(maxAttempts = 3, attemptDelay = 500, callback
     function retryOrFail() {
         currentAttempt++;
         if (currentAttempt <= maxAttempts) {
-            // console.log(`DEBUG: Retrying analytics check in ${attemptDelay}ms (attempt ${currentAttempt}/${maxAttempts})`);
             setTimeout(checkAnalytics, attemptDelay);
         } else {
-            // console.log(`DEBUG: All ${maxAttempts} attempts failed, analytics is not working`);
             callback(false);
         }
     }
     
-    // Start the first check
     checkAnalytics();
 }
 
@@ -63,27 +45,22 @@ function convertSubmitButtonsToButtonElements() {
     const submitButtons = document.querySelectorAll('.email-form__button');
     const convertedButtons = [];
 
-    // Convert NodeList to Array to avoid issues with live collections when replacing elements
     Array.from(submitButtons).forEach(originalButton => {
         let button;
         
-        // Replace the element with a button element if it's not already a button
         if (originalButton.tagName.toLowerCase() !== 'button') {
             button = document.createElement('button');
             
-            // Only copy class attribute from original element
             if (originalButton.className) {
                 button.className = originalButton.className;
             }
             
-            // Use the value attribute as button text if it exists, otherwise copy the inner HTML
             if (originalButton.hasAttribute('value')) {
                 button.textContent = originalButton.value;
             } else {
                 button.innerHTML = originalButton.innerHTML;
             }
             
-            // Replace the original element with the new button
             originalButton.parentNode.replaceChild(button, originalButton);
         } else {
             button = originalButton;
@@ -95,50 +72,157 @@ function convertSubmitButtonsToButtonElements() {
     return convertedButtons;
 }
 
+// Function to get cookie value by name
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    return null;
+}
+
+// Function to collect metadata for context.traits
+function collectMetadata(email) {
+    const urlParams = new URLSearchParams(window.location.search);
+    
+    return {
+        fullurl: window.location.href || null,
+        utm_source: urlParams.get('utm_source') || null,
+        utm_medium: urlParams.get('utm_medium') || null,
+        utm_campaign: urlParams.get('utm_campaign') || null,
+        utm_funnel: urlParams.get('utm_funnel') || null,
+        fbc: getCookie('_fbc') || urlParams.get('fbclid') || null,
+        fbp: getCookie('_fbp') || null,
+        email: email || null,
+        user_agent: navigator.userAgent || null,
+        ip_address: null,
+        userId: typeof analytics !== 'undefined' && analytics.user ? analytics.user().id() : null
+    };
+}
+
+// Function to populate hidden input fields with metadata
+function populateMetadataInputs(form, metadata) {
+    const inputMappings = {
+        'email-form__metadata-full-url': metadata.fullurl,
+        'email-form__metadata-utm-source': metadata.utm_source,
+        'email-form__metadata-utm-medium': metadata.utm_medium,
+        'email-form__metadata-utm-campaign': metadata.utm_campaign,
+        'email-form__metadata-utm-funnel': metadata.utm_funnel,
+        'email-form__metadata-fbc': metadata.fbc,
+        'email-form__metadata-fbp': metadata.fbp,
+        'email-form__metadata-email': metadata.email,
+        'email-form__metadata-user-agent': metadata.user_agent,
+        'email-form__metadata-ip-address': metadata.ip_address,
+        'email-form__metadata-user-id': metadata.userId
+    };
+    
+    for (const [className, value] of Object.entries(inputMappings)) {
+        const input = form.querySelector(`.${className}`);
+        if (input && value !== null) {
+            input.value = value;
+        }
+    }
+}
+
+// Function to submit form data to Webflow
+function submitFormToWebflow(container, callback) {
+    try {
+        const form = container.tagName === 'FORM' ? container : container.querySelector('form');
+        
+        if (!form) {
+            console.error('Form element not found');
+            if (callback) callback();
+            return;
+        }
+        
+        const siteId = form.closest('[data-wf-site]')?.getAttribute('data-wf-site') || 
+                       document.documentElement.getAttribute('data-wf-site');
+        const pageId = form.getAttribute('data-wf-page-id');
+        const elementId = form.getAttribute('data-wf-element-id');
+        const formName = form.getAttribute('name') || form.getAttribute('data-name') || 'Email Form';
+        
+        if (!siteId || !pageId || !elementId) {
+            console.error('Missing required form attributes (site ID, page ID, or element ID)');
+            if (callback) callback();
+            return;
+        }
+        
+        const formData = new FormData(form);
+        const params = new URLSearchParams();
+        
+        params.append('name', formName);
+        params.append('pageId', pageId);
+        params.append('elementId', elementId);
+        params.append('domain', window.location.hostname);
+        params.append('source', window.location.href);
+        params.append('test', 'false');
+        params.append('dolphin', 'false');
+        
+        formData.forEach((value, key) => {
+            const input = form.querySelector(`[name="${key}"]`);
+            const label = input?.getAttribute('data-name') || 
+                         input?.previousElementSibling?.textContent || 
+                         key;
+            params.append(`fields[${label}]`, value);
+        });
+        
+        fetch(`https://webflow.com/api/v1/form/${siteId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+            },
+            body: params.toString(),
+            mode: 'cors',
+            credentials: 'omit'
+        })
+        .then(response => {
+            if (!response.ok) {
+                console.error('Form submission failed:', response.status);
+            }
+        })
+        .catch(error => {
+            console.error('Error submitting form to Webflow:', error);
+        })
+        .finally(() => {
+            if (callback) callback();
+        });
+    } catch (error) {
+        console.error('Error submitting form to Webflow:', error);
+        if (callback) callback();
+    }
+}
+
 // Main function to handle form submission and analytics tracking
 document.addEventListener('DOMContentLoaded', function() {
     
     const submitButtons = document.querySelectorAll('.email-form__button');
 
-    // Check if there are any submit buttons on the page
     if (submitButtons.length === 0) {
-        // console.log("DEBUG: No .email-form__button elements found on the page");
         return;
     }
 
-    // console.log(`DEBUG: Found ${submitButtons.length} .email-form__button elements`);
-
-    // Convert all submit buttons to button elements regardless of analytics status
     const convertedButtons = convertSubmitButtonsToButtonElements();
-    // console.log("DEBUG: Submit buttons converted to button elements");
 
-    // Check if the analytics object is defined and has the track method
     isSegmentAnalyticsWorking(3, 800, function(analyticsIsWorking) {
-        // console.log("DEBUG: Final analytics status:", analyticsIsWorking);
 
         if (analyticsIsWorking) {
-            // console.log("DEBUG: Analytics is working, proceeding with analytics-dependent code");
 
-            // Add event listeners to converted buttons
             convertedButtons.forEach(button => {
-                // Add click event listener to the button
                 button.addEventListener("click", (e) => {
                     e.preventDefault();
-                    // console.log("Debug: Form Submit Started");
                     
-                    // Read form values when the button is clicked
                     const el = button.closest('[email-form]') || button.closest('form');
                     
                     if (!el) {
-                        // console.error("Form not found!");
                         return;
                     }
                     
-                    // Reading the form values from here
                     const email = el.querySelector('[email-form__input]').value;
+                    
+                    const metadata = collectMetadata(email);
+                    populateMetadataInputs(el, metadata);
+                    
                     const secondaryEvent = el.getAttribute('data-secondary-event') || '';
                     
-                    // Check if attributes exist and have value "true"
                     const disableEmailPosting = el.getAttribute('data-disable-email-posting') === 'true';
                     const disableURLQueryParamsCarrying = el.getAttribute('data-disable-url-query-parameter-carrying') === 'true';
                     const enableSendingUtm = el.getAttribute('data-enable-sending-utm') === 'true';
@@ -158,13 +242,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     const utmMedium = URLQueryParams.includes('utm_medium') ? new URLSearchParams(URLQueryParams).get('utm_medium') : null;
                     const utmCampaign = URLQueryParams.includes('utm_campaign') ? new URLSearchParams(URLQueryParams).get('utm_campaign') : null;
                     
-                    // Analytics data
                     const analyticsData = {
                         email: email,
                         sfdc_Lead_Source: customSfdc || window.global_sfdc_Lead_Source,
                     };
                     
-                    // Check for additional props from global variable
                     const additionalPropsVar = el.getAttribute('data-additional-props');
                     if (additionalPropsVar && window[additionalPropsVar] && typeof window[additionalPropsVar] === 'object') {
                         Object.assign(analyticsData, window[additionalPropsVar]);
@@ -183,7 +265,6 @@ document.addEventListener('DOMContentLoaded', function() {
                             analyticsData.utmCampaign = utmCampaign;
                     }
                     
-                    // Creating the target URL
                     let targetURL;
                     if (redirectURL) {
                         targetURL = new URL(redirectURL);
@@ -206,60 +287,59 @@ document.addEventListener('DOMContentLoaded', function() {
                         targetURL.searchParams.set('gclid', gclid);
                     }
                     
-                    // Perform operations if email exists
+                    const analyticsOptions = {
+                        integrations: {
+                            Salesforce: true,
+                        },
+                        context: {
+                            traits: metadata
+                        }
+                    };
+                    
                     if (email) {
                         if (!disableEmailPosting) {
                             targetURL.searchParams.set('email', email);
                         }
                         
-                        if (typeof analytics !== 'undefined' && typeof analytics.track === 'function') {
-                            analytics.track(customEvent || window.global_analytics_track, analyticsData, {
-                                integrations: {
-                                    Salesforce: true,
-                                },
-                            }, function() {
-                                if (secondaryEvent) {
-                                    analytics.track(secondaryEvent, analyticsData, {
-                                        integrations: {
-                                            Salesforce: true,
-                                        },
-                                    }, function() {
+                        submitFormToWebflow(el, function() {
+                            if (typeof analytics !== 'undefined' && typeof analytics.track === 'function') {
+                                analytics.track(customEvent || window.global_analytics_track, analyticsData, analyticsOptions, function() {
+                                    if (secondaryEvent) {
+                                        analytics.track(secondaryEvent, analyticsData, analyticsOptions, function() {
+                                            window.location = targetURL.toString();
+                                        });
+                                    } else {
                                         window.location = targetURL.toString();
-                                    });
-                                } else {
-                                    window.location = targetURL.toString();
-                                }
-                            });
-                        } else {
-                            window.location = targetURL.toString();
-                        }
+                                    }
+                                });
+                            } else {
+                                window.location = targetURL.toString();
+                            }
+                        });
                     } else {
-                        // If email doesn't exist
                         if (separateRedirectionUrlWithoutEmail) {
                             const analyticsDataWithoutEmail = {
                                 ...analyticsData
                             };
                             delete analyticsDataWithoutEmail.email;
                             
-                            if (typeof analytics !== 'undefined' && typeof analytics.track === 'function') {
-                                analytics.track(customEvent || window.global_analytics_track, analyticsDataWithoutEmail, {
-                                    integrations: {
-                                        Salesforce: true,
-                                    },
-                                }, function() {
+                            submitFormToWebflow(el, function() {
+                                if (typeof analytics !== 'undefined' && typeof analytics.track === 'function') {
+                                    analytics.track(customEvent || window.global_analytics_track, analyticsDataWithoutEmail, analyticsOptions, function() {
+                                        window.location = separateRedirectionUrlWithoutEmail;
+                                    });
+                                } else {
                                     window.location = separateRedirectionUrlWithoutEmail;
-                                });
-                            } else {
-                                window.location = separateRedirectionUrlWithoutEmail;
-                            }
+                                }
+                            });
                         } else {
-                            window.location = targetURL.toString();
+                            submitFormToWebflow(el, function() {
+                                window.location = targetURL.toString();
+                            });
                         }
                     }
                 });
             });
-        } else {
-            // console.log("DEBUG: Analytics is not working, buttons converted but no event listeners added");
         }
     });
 });
