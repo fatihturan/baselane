@@ -393,6 +393,9 @@ function showLoadingState(form, email, address) {
       // Set up quote_created event listener
       Obie.events.on("quote_created", ({ quoteRequestId }) => {
         quoteCreated = true;
+
+        dataLayer.push({'event':'obie_quote_created'});
+
         console.log('Quote created - quoteCreated is now true');
         if (typeof analytics !== 'undefined' && typeof analytics.track === 'function') {
           analytics.track('obie_quote_created', {
