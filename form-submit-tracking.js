@@ -1,3 +1,4 @@
+(function(){
 // Function to check if Segment analytics is properly working with retry mechanism
 function isSegmentAnalyticsWorking(maxAttempts = 3, attemptDelay = 500, callback) {
     let currentAttempt = 1;
@@ -89,6 +90,8 @@ function collectMetadata(email) {
         utm_source: urlParams.get('utm_source') || null,
         utm_medium: urlParams.get('utm_medium') || null,
         utm_campaign: urlParams.get('utm_campaign') || null,
+        utm_term: urlParams.get('utm_term') || null,
+        utm_content: urlParams.get('utm_content') || null,
         utm_funnel: urlParams.get('utm_funnel') || null,
         fbc: getCookie('_fbc') || urlParams.get('fbclid') || null,
         fbp: getCookie('_fbp') || null,
@@ -107,6 +110,8 @@ function populateMetadataInputs(form, metadata) {
         'metadata-utm-medium': metadata.utm_medium,
         'metadata-utm-campaign': metadata.utm_campaign,
         'metadata-utm-funnel': metadata.utm_funnel,
+        'metadata-utm-term': metadata.utm_term,
+        'metadata-utm-content': metadata.utm_content,
         'metadata-fbc': metadata.fbc,
         'metadata-fbp': metadata.fbp,
         'metadata-email': metadata.email,
@@ -343,3 +348,4 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+})();
