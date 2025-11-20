@@ -1,21 +1,54 @@
-var city = "";
-var state = "";
-var postalCode = "";
-var addressLine1 = "";
-var streetNumber = "";
-var address = "";
-var country = "";
-
-let autocompleteInstances = new Map();
-let phoneMaskInstances = new Map();
-let formData = {
-  address: "",
-  email: "",
-  phone: "",
-  firstName: "",
-  lastName: "",
-  rentalUnits: "",
-  rentalIncome: ""
+const AppState = {
+  address: {
+    city: "",
+    state: "",
+    postalCode: "",
+    addressLine1: "",
+    streetNumber: "",
+    fullAddress: "",
+    country: ""
+  },
+  
+  instances: {
+    autocomplete: new Map(),
+    phoneMask: new Map()
+  },
+  
+  formData: {
+    address: "",
+    email: "",
+    phone: "",
+    firstName: "",
+    lastName: "",
+    rentalUnits: "",
+    rentalIncome: ""
+  },
+  
+  resetAddress() {
+    this.address.city = "";
+    this.address.state = "";
+    this.address.postalCode = "";
+    this.address.addressLine1 = "";
+    this.address.streetNumber = "";
+    this.address.fullAddress = "";
+    this.address.country = "";
+  },
+  
+  resetFormData() {
+    this.formData = {
+      address: "",
+      email: "",
+      phone: "",
+      firstName: "",
+      lastName: "",
+      rentalUnits: "",
+      rentalIncome: ""
+    };
+  },
+  
+  getAddressComponents() {
+    return { ...this.address };
+  }
 };
 
 function getCity(components_by_type, addressType) {
@@ -34,12 +67,7 @@ function getCity(components_by_type, addressType) {
 function parseAddressComponents(place) {
   var components_by_type = {};
 
-  city = "";
-  state = "";
-  postalCode = "";
-  addressLine1 = "";
-  streetNumber = "";
-  country = "";
+  AppState.resetAddress();
 
   if (!place.address_components) return;
 
@@ -57,52 +85,52 @@ function parseAddressComponents(place) {
       const addressType = place.address_components[i].types[j];
       
       if (addressType == "street_number") {
-        streetNumber = components_by_type["street_number"].long_name;
+        AppState.address.streetNumber = components_by_type["street_number"].long_name;
       }
       
       if (addressType == "route") {
-        addressLine1 = components_by_type["route"].short_name;
+        AppState.address.addressLine1 = components_by_type["route"].short_name;
       }
 
-      if (!city) {
-        city = getCity(components_by_type, addressType);
+      if (!AppState.address.city) {
+        AppState.address.city = getCity(components_by_type, addressType);
       }
 
-      if (!state && addressType == "administrative_area_level_1") {
-        state = components_by_type["administrative_area_level_1"].short_name;
+      if (!AppState.address.state && addressType == "administrative_area_level_1") {
+        AppState.address.state = components_by_type["administrative_area_level_1"].short_name;
       }
 
       if (addressType == "country") {
-        country = components_by_type["country"].long_name;
+        AppState.address.country = components_by_type["country"].long_name;
       }
       
       if (addressType == "postal_code") {
-        postalCode = components_by_type["postal_code"].long_name;
+        AppState.address.postalCode = components_by_type["postal_code"].long_name;
       }
     }
   }
 
-  if (streetNumber && addressLine1) {
-    addressLine1 = streetNumber + " " + addressLine1;
+  if (AppState.address.streetNumber && AppState.address.addressLine1) {
+    AppState.address.addressLine1 = AppState.address.streetNumber + " " + AppState.address.addressLine1;
   }
 
-  if (!city) {
+  if (!AppState.address.city) {
     console.warn("Warning: City not found in address");
   }
-  if (!state) {
+  if (!AppState.address.state) {
     console.warn("Warning: State not found in address");
   }
 
-  address = place.formatted_address;
+  AppState.address.fullAddress = place.formatted_address;
 
   return {
-    streetNumber: streetNumber,
-    addressLine1: addressLine1,
-    city: city,
-    state: state,
-    postalCode: postalCode,
-    country: country,
-    fullAddress: address
+    streetNumber: AppState.address.streetNumber,
+    addressLine1: AppState.address.addressLine1,
+    city: AppState.address.city,
+    state: AppState.address.state,
+    postalCode: AppState.address.postalCode,
+    country: AppState.address.country,
+    fullAddress: AppState.address.fullAddress
   };
 }
 
@@ -192,7 +220,7 @@ function updateMetaFields(container, additionalData = {}) {
     'data-meta-utm-content': urlParams.utm_content,
     'data-meta-fbc': fbParams.fbc,
     'data-meta-fbp': fbParams.fbp,
-    'data-meta-email': additionalData.email || formData.email || null,
+    'data-meta-email': additionalData.email || AppState.formData.email || null,
     'data-meta-user-agent': userAgent,
     'data-meta-user-id': userId
   };
@@ -290,13 +318,13 @@ function initializePhoneMask() {
     phoneInput.id = inputId;
   }
   
-  if (phoneMaskInstances.has(inputId)) {
+  if (AppState.instances.phoneMask.has(inputId)) {
     try {
-      const existingMask = phoneMaskInstances.get(inputId);
+      const existingMask = AppState.instances.phoneMask.get(inputId);
       if (existingMask && typeof existingMask.destroy === 'function') {
         existingMask.destroy();
       }
-      phoneMaskInstances.delete(inputId);
+      AppState.instances.phoneMask.delete(inputId);
     } catch (error) {
       console.warn('Error cleaning up existing phone mask:', error);
     }
@@ -316,7 +344,7 @@ function initializePhoneMask() {
     
     const mask = IMask(phoneInput, maskOptions);
     
-    phoneMaskInstances.set(inputId, mask);
+    AppState.instances.phoneMask.set(inputId, mask);
     
     phoneInput.setAttribute('data-mask-initialized', 'true');
     
@@ -326,7 +354,7 @@ function initializePhoneMask() {
 }
 
 function cleanupPhoneMaskInstances() {
-  phoneMaskInstances.forEach((mask, inputId) => {
+  AppState.instances.phoneMask.forEach((mask, inputId) => {
     try {
       if (mask && typeof mask.destroy === 'function') {
         mask.destroy();
@@ -335,7 +363,7 @@ function cleanupPhoneMaskInstances() {
       console.warn('Error cleaning up phone mask instance:', inputId, error);
     }
   });
-  phoneMaskInstances.clear();
+  AppState.instances.phoneMask.clear();
 }
 
 function initializePopupAddressAutocomplete() {
@@ -355,13 +383,13 @@ function initializePopupAddressAutocomplete() {
     addressInput.id = inputId;
   }
   
-  if (autocompleteInstances.has(inputId)) {
+  if (AppState.instances.autocomplete.has(inputId)) {
     try {
-      const existingAutocomplete = autocompleteInstances.get(inputId);
+      const existingAutocomplete = AppState.instances.autocomplete.get(inputId);
       if (existingAutocomplete && typeof existingAutocomplete.unbindAll === 'function') {
         existingAutocomplete.unbindAll();
       }
-      autocompleteInstances.delete(inputId);
+      AppState.instances.autocomplete.delete(inputId);
     } catch (error) {
       console.warn('Error cleaning up existing autocomplete:', error);
     }
@@ -379,7 +407,7 @@ function initializePopupAddressAutocomplete() {
       componentRestrictions: { country: 'us' }
     });
     
-    autocompleteInstances.set(inputId, autocomplete);
+    AppState.instances.autocomplete.set(inputId, autocomplete);
     
     autocomplete.addListener('place_changed', function() {
       const place = autocomplete.getPlace();
@@ -419,7 +447,7 @@ function initializePopupAddressAutocomplete() {
 }
 
 function cleanupAutocompleteInstances() {
-  autocompleteInstances.forEach((autocomplete, inputId) => {
+  AppState.instances.autocomplete.forEach((autocomplete, inputId) => {
     try {
       if (autocomplete && typeof autocomplete.unbindAll === 'function') {
         autocomplete.unbindAll();
@@ -428,7 +456,7 @@ function cleanupAutocompleteInstances() {
       console.warn('Error cleaning up autocomplete instance:', inputId, error);
     }
   });
-  autocompleteInstances.clear();
+  AppState.instances.autocomplete.clear();
 }
 
 function findActiveInputs() {
@@ -534,6 +562,7 @@ function showError(input, show = true, customMessage = null) {
     }
   }
 }
+
 function isRepeatingDigits(str) {
   if (str.length < 4) return false;
   
@@ -596,6 +625,7 @@ function validateInput(input, type) {
   showError(input, !isValid, errorMessage);
   return isValid;
 }
+
 function validateForm() {
   const { addressInput, emailInput, phoneInput } = findActiveInputs();
   
@@ -698,13 +728,13 @@ function submitFormToWebflow(container, callback) {
     params.append('test', 'false');
     params.append('dolphin', 'false');
     
-    params.append('fields[Property Address]', formData.address || '');
-    params.append('fields[Valid Email]', formData.email || '');
-    params.append('fields[Phone Number]', formData.phone || '');
-    params.append('fields[First Name]', formData.firstName || '');
-    params.append('fields[Last Name]', formData.lastName || '');
-    params.append('fields[Rental Units]', formData.rentalUnits || '');
-    params.append('fields[Rental Income]', formData.rentalIncome || '');
+    params.append('fields[Property Address]', AppState.formData.address || '');
+    params.append('fields[Valid Email]', AppState.formData.email || '');
+    params.append('fields[Phone Number]', AppState.formData.phone || '');
+    params.append('fields[First Name]', AppState.formData.firstName || '');
+    params.append('fields[Last Name]', AppState.formData.lastName || '');
+    params.append('fields[Rental Units]', AppState.formData.rentalUnits || '');
+    params.append('fields[Rental Income]', AppState.formData.rentalIncome || '');
     
     const metaContainer = form.querySelector('[p-obie__steps-meta]');
     if (metaContainer) {
@@ -895,7 +925,7 @@ function handleObieSubmission(email, phone, address) {
       }
     });
 
-    const addressToSend = addressLine1 || '';
+    const addressToSend = AppState.address.addressLine1 || '';
     
     const URLParams = new URLSearchParams(window.location.search);
     const gclid = URLParams.get('gclid');
@@ -922,37 +952,37 @@ function handleObieSubmission(email, phone, address) {
     console.log('Opening Obie with data:', {
       email: email,
       phone: phone,
-      firstName: formData.firstName,
-      lastName: formData.lastName,
+      firstName: AppState.formData.firstName,
+      lastName: AppState.formData.lastName,
       addressLine1: addressToSend,
-      city: city,
-      state: state,
-      postalCode: postalCode
+      city: AppState.address.city,
+      state: AppState.address.state,
+      postalCode: AppState.address.postalCode
     });
     
-Obie.open({
-  partnerId: partnerId,
-  sandbox: !isProduction,
-  values: {
-    person: {
-      firstName: formData.firstName,
-      lastName: formData.lastName,
-      email: email,
-      phoneNumber: phone,
-    },
-    property: {
-      addressLine1: addressToSend,
-      city: city,
-      state: state, 
-      postalCode: postalCode,
-    },
-  },
-  metadata: {
-    email: email,
-    phone: phone,
-    uniqueCode: gclid
-  },
-});
+    Obie.open({
+      partnerId: partnerId,
+      sandbox: !isProduction,
+      values: {
+        person: {
+          firstName: AppState.formData.firstName,
+          lastName: AppState.formData.lastName,
+          email: email,
+          phoneNumber: phone,
+        },
+        property: {
+          addressLine1: addressToSend,
+          city: AppState.address.city,
+          state: AppState.address.state, 
+          postalCode: AppState.address.postalCode,
+        },
+      },
+      metadata: {
+        email: email,
+        phone: phone,
+        uniqueCode: gclid
+      },
+    });
   }
 }
 
@@ -965,9 +995,9 @@ function validateAndSubmit() {
   
   const { address, email, phone } = validation.values;
   
-  formData.address = address;
-  formData.email = email;
-  formData.phone = phone;
+  AppState.formData.address = address;
+  AppState.formData.email = email;
+  AppState.formData.phone = phone;
   
   const popupContainer = document.querySelector('#glightbox-body .p-obie') || 
                         document.querySelector('.p-obie');
@@ -1019,20 +1049,20 @@ function setupStep1() {
       const lastNameValid = validateInput(lastNameInput, 'text');
       
       if (firstNameValid && lastNameValid) {
-        formData.firstName = firstNameInput.value.trim();
-        formData.lastName = lastNameInput.value.trim();
+        AppState.formData.firstName = firstNameInput.value.trim();
+        AppState.formData.lastName = lastNameInput.value.trim();
         
-        updateMetaFields(container, { email: formData.email });
+        updateMetaFields(container, { email: AppState.formData.email });
         
         if (typeof analytics !== 'undefined' && typeof analytics.track === 'function') {
           const metaData = getMetaData();
           
           analytics.track('lp_lead', {
-            firstName: formData.firstName,
-            lastName: formData.lastName,
-            email: formData.email,
-            phone: formData.phone,
-            address: formData.address,
+            firstName: AppState.formData.firstName,
+            lastName: AppState.formData.lastName,
+            email: AppState.formData.email,
+            phone: AppState.formData.phone,
+            address: AppState.formData.address,
             sfdc_Lead_Source: window.global_sfdc_Lead_Source
           }, {
             context: {
@@ -1067,16 +1097,16 @@ function setupStep2() {
       
       const handleSelection = function() {
         if (newRadio.checked) {
-          formData.rentalUnits = newRadio.value;
-          updateMetaFields(container, { email: formData.email });
+          AppState.formData.rentalUnits = newRadio.value;
+          updateMetaFields(container, { email: AppState.formData.email });
           
           if (typeof analytics !== 'undefined' && typeof analytics.track === 'function') {
             analytics.track('obie_form_step_2', {
               rentalUnits: newRadio.value,
-              email: formData.email,
-              phone: formData.phone,
-              firstName: formData.firstName,
-              lastName: formData.lastName
+              email: AppState.formData.email,
+              phone: AppState.formData.phone,
+              firstName: AppState.formData.firstName,
+              lastName: AppState.formData.lastName
             });
           }
           
@@ -1120,24 +1150,24 @@ function setupStep3() {
       
       const handleSelection = function() {
         if (newRadio.checked) {
-          formData.rentalIncome = newRadio.value;
+          AppState.formData.rentalIncome = newRadio.value;
           
-          updateMetaFields(container, { email: formData.email });
+          updateMetaFields(container, { email: AppState.formData.email });
           
           if (typeof analytics !== 'undefined' && typeof analytics.track === 'function') {
             analytics.track('obie_form_step_3', {
               rentalIncome: newRadio.value,
-              rentalUnits: formData.rentalUnits,
-              email: formData.email,
-              phone: formData.phone,
-              firstName: formData.firstName,
-              lastName: formData.lastName
+              rentalUnits: AppState.formData.rentalUnits,
+              email: AppState.formData.email,
+              phone: AppState.formData.phone,
+              firstName: AppState.formData.firstName,
+              lastName: AppState.formData.lastName
             });
           }
           
-          console.log('Form completed with data:', formData);
+          console.log('Form completed with data:', AppState.formData);
           
-          handleObieSubmission(formData.email, formData.phone, formData.address);
+          handleObieSubmission(AppState.formData.email, AppState.formData.phone, AppState.formData.address);
         }
       };
       
@@ -1264,15 +1294,7 @@ const observer = new MutationObserver(function(mutations) {
             cleanupAutocompleteInstances();
             cleanupPhoneMaskInstances();
             
-            formData = {
-              address: "",
-              email: "",
-              phone: "",
-              firstName: "",
-              lastName: "",
-              rentalUnits: "",
-              rentalIncome: ""
-            };
+            AppState.resetFormData();
           }, 100);
         }
       }
@@ -1307,15 +1329,7 @@ document.addEventListener('DOMContentLoaded', function() {
         cleanupAutocompleteInstances();
         cleanupPhoneMaskInstances();
         
-        formData = {
-          address: "",
-          email: "",
-          phone: "",
-          firstName: "",
-          lastName: "",
-          rentalUnits: "",
-          rentalIncome: ""
-        };
+        AppState.resetFormData();
         
         return originalClose.apply(this, arguments);
       };
@@ -1356,13 +1370,5 @@ setInterval(function() {
 }, 500);
 
 function getCurrentAddressComponents() {
-  return {
-    streetNumber: streetNumber,
-    addressLine1: addressLine1,
-    city: city,
-    state: state,
-    postalCode: postalCode,
-    country: country,
-    fullAddress: address
-  };
+  return AppState.getAddressComponents();
 }
