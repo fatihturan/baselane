@@ -367,36 +367,32 @@ function cleanupPhoneMaskInstances() {
 }
 
 function initializePopupAddressAutocomplete() {
-  const popupContainer = document.querySelector('#glightbox-body [popup__content]') || 
+  const popupContainer = document.querySelector('#glightbox-body [popup__content]') ||
                         document.querySelector('#obie');
-  
+
   if (!popupContainer) return;
-  
+
   const addressInput = popupContainer.querySelector('.obie-address');
-  
+
   if (!addressInput) {
     return;
   }
-  
+
+  if (addressInput.getAttribute('data-autocomplete-initialized') === 'true') {
+    return;
+  }
+
   const inputId = addressInput.id || 'popup-address-' + Date.now();
   if (!addressInput.id) {
     addressInput.id = inputId;
   }
-  
+
   if (AppState.instances.autocomplete.has(inputId)) {
-    try {
-      const existingAutocomplete = AppState.instances.autocomplete.get(inputId);
-      if (existingAutocomplete && typeof existingAutocomplete.unbindAll === 'function') {
-        existingAutocomplete.unbindAll();
-      }
-      AppState.instances.autocomplete.delete(inputId);
-    } catch (error) {
-      console.warn('Error cleaning up existing autocomplete:', error);
-    }
+    return;
   }
-  
-  addressInput.removeAttribute('data-autocomplete-initialized');
-  
+
+  addressInput.setAttribute('data-autocomplete-initialized', 'true');
+
   loadGoogleMapsAPI().then(() => {
     if (!window.google || !window.google.maps || !window.google.maps.places) {
       throw new Error('Google Maps Places API not available');
@@ -438,10 +434,9 @@ function initializePopupAddressAutocomplete() {
       style.setAttribute('data-pac-container', 'true');
       document.head.appendChild(style);
     }
-    
-    addressInput.setAttribute('data-autocomplete-initialized', 'true');
-    
+
   }).catch(error => {
+    addressInput.removeAttribute('data-autocomplete-initialized');
     console.error('Google Maps API failed to load:', error);
   });
 }
