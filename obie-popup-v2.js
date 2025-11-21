@@ -234,7 +234,7 @@ function updateMetaFields(container, additionalData = {}) {
 }
 
 function initializeMetaFields() {
-  const containers = document.querySelectorAll('.p-obie');
+  const containers = document.querySelectorAll('[p-obie]');
   containers.forEach(container => {
     updateMetaFields(container);
   });
@@ -651,16 +651,16 @@ function validateForm() {
 }
 
 function showStep(stepNumber) {
-  const popupContainer = document.querySelector('#glightbox-body .p-obie') || 
-                        document.querySelector('.p-obie');
-  
+  const popupContainer = document.querySelector('#glightbox-body [p-obie]') ||
+                        document.querySelector('[p-obie]');
+
   if (!popupContainer) return;
-  
-  const allSteps = popupContainer.querySelectorAll('.p-obie__step');
+
+  const allSteps = popupContainer.querySelectorAll('[p-obie__step]');
   allSteps.forEach(step => {
     step.style.display = 'none';
   });
-  
+
   const targetStep = popupContainer.querySelector(`.p-obie__step-${stepNumber}`);
   if (targetStep) {
     targetStep.style.display = 'block';
@@ -668,11 +668,11 @@ function showStep(stepNumber) {
 }
 
 function hideFormWrapper() {
-  const popupContainer = document.querySelector('#glightbox-body .p-obie') || 
-                        document.querySelector('.p-obie');
-  
+  const popupContainer = document.querySelector('#glightbox-body [p-obie]') ||
+                        document.querySelector('[p-obie]');
+
   if (!popupContainer) return;
-  
+
   const formWrapper = popupContainer.querySelector('[p-obie__form-wrapper]');
   if (formWrapper) {
     formWrapper.style.display = 'none';
@@ -680,17 +680,17 @@ function hideFormWrapper() {
 }
 
 function showFormWrapper() {
-  const popupContainer = document.querySelector('#glightbox-body .p-obie') || 
-                        document.querySelector('.p-obie');
-  
+  const popupContainer = document.querySelector('#glightbox-body [p-obie]') ||
+                        document.querySelector('[p-obie]');
+
   if (!popupContainer) return;
-  
+
   const formWrapper = popupContainer.querySelector('[p-obie__form-wrapper]');
   if (formWrapper) {
     formWrapper.style.display = 'block';
   }
-  
-  const allSteps = popupContainer.querySelectorAll('.p-obie__step');
+
+  const allSteps = popupContainer.querySelectorAll('[p-obie__step]');
   allSteps.forEach(step => {
     step.style.display = 'none';
   });
@@ -784,7 +784,7 @@ function submitFormToWebflow(container, callback) {
 }
 
 function handleObieSubmission(email, phone, address) {
-  const popupContainer = document.querySelector('.p-obie');
+  const popupContainer = document.querySelector('[p-obie]');
   
   let launchAfterObieValue = null;
   if (popupContainer) {
@@ -794,8 +794,8 @@ function handleObieSubmission(email, phone, address) {
     }
   }
   
-  const formContainer = document.querySelector('#glightbox-body .p-obie') || 
-                       document.querySelector('.p-obie');
+  const formContainer = document.querySelector('#glightbox-body [p-obie]') ||
+                       document.querySelector('[p-obie]');
   
   if (formContainer) {
     submitFormToWebflow(formContainer);
@@ -999,8 +999,8 @@ function validateAndSubmit() {
   AppState.formData.email = email;
   AppState.formData.phone = phone;
   
-  const popupContainer = document.querySelector('#glightbox-body .p-obie') || 
-                        document.querySelector('.p-obie');
+  const popupContainer = document.querySelector('#glightbox-body [p-obie]') ||
+                        document.querySelector('[p-obie]');
   if (popupContainer) {
     updateMetaFields(popupContainer, { email: email });
   }
@@ -1021,19 +1021,19 @@ function validateAndSubmit() {
 }
 
 function setupStep1() {
-  const popupContainers = document.querySelectorAll('.p-obie');
-  
+  const popupContainers = document.querySelectorAll('[p-obie]');
+
   popupContainers.forEach(function(container) {
     const nextButton = container.querySelector('.p-obie-step-form-next');
     if (!nextButton) return;
-    
+
     const newButton = nextButton.cloneNode(true);
     nextButton.parentNode.replaceChild(newButton, nextButton);
-    
+
     newButton.addEventListener('click', function(e) {
       e.preventDefault();
       e.stopPropagation();
-      
+
       const step1 = container.querySelector('.p-obie__step-1');
       if (!step1) return;
       
@@ -1071,17 +1071,17 @@ function setupStep1() {
 }
 
 function setupStep2() {
-  const popupContainers = document.querySelectorAll('.p-obie');
-  
+  const popupContainers = document.querySelectorAll('[p-obie]');
+
   popupContainers.forEach(function(container) {
     const step2 = container.querySelector('.p-obie__step-2');
     if (!step2) return;
-    
-    const radioRows = step2.querySelectorAll('.radio-row');
-    
+
+    const radioRows = step2.querySelectorAll('[radio-row]');
+
     radioRows.forEach(function(row) {
       const radio = row.querySelector('input[name="obie-step-2-rental-units"]');
-      const label = row.querySelector('.radio-row__label');
+      const label = row.querySelector('[radio-row__label]');
       
       if (!radio) return;
       
@@ -1124,17 +1124,17 @@ function setupStep2() {
 }
 
 function setupStep3() {
-  const popupContainers = document.querySelectorAll('.p-obie');
-  
+  const popupContainers = document.querySelectorAll('[p-obie]');
+
   popupContainers.forEach(function(container) {
     const step3 = container.querySelector('.p-obie__step-3');
     if (!step3) return;
-    
-    const radioRows = step3.querySelectorAll('.radio-row');
-    
+
+    const radioRows = step3.querySelectorAll('[radio-row]');
+
     radioRows.forEach(function(row) {
       const radio = row.querySelector('input[name="obie-step-3-rental-income"]');
-      const label = row.querySelector('.radio-row__label');
+      const label = row.querySelector('[radio-row__label]');
       
       if (!radio) return;
       
