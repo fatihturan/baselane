@@ -378,7 +378,8 @@ function initializePopupAddressAutocomplete() {
     return;
   }
 
-  if (addressInput.getAttribute('data-autocomplete-initialized') === 'true') {
+  const initStatus = addressInput.getAttribute('data-autocomplete-initialized');
+  if (initStatus === 'true' || initStatus === 'pending') {
     return;
   }
 
@@ -391,7 +392,7 @@ function initializePopupAddressAutocomplete() {
     return;
   }
 
-  addressInput.setAttribute('data-autocomplete-initialized', 'true');
+  addressInput.setAttribute('data-autocomplete-initialized', 'pending');
 
   loadGoogleMapsAPI().then(() => {
     if (!window.google || !window.google.maps || !window.google.maps.places) {
@@ -404,7 +405,8 @@ function initializePopupAddressAutocomplete() {
     });
     
     AppState.instances.autocomplete.set(inputId, autocomplete);
-    
+    addressInput.setAttribute('data-autocomplete-initialized', 'true');
+
     autocomplete.addListener('place_changed', function() {
       const place = autocomplete.getPlace();
       
