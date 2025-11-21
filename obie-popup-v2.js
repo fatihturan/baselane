@@ -1055,19 +1055,12 @@ function setupStep1() {
         updateMetaFields(container, { email: AppState.formData.email });
         
         if (typeof analytics !== 'undefined' && typeof analytics.track === 'function') {
-          const metaData = getMetaData();
-          
-          analytics.track('lp_lead', {
+          analytics.track('obie_form_step_1', {
             firstName: AppState.formData.firstName,
             lastName: AppState.formData.lastName,
             email: AppState.formData.email,
             phone: AppState.formData.phone,
-            address: AppState.formData.address,
-            sfdc_Lead_Source: window.global_sfdc_Lead_Source
-          }, {
-            context: {
-              traits: metaData
-            }
+            address: AppState.formData.address
           });
         }
         
@@ -1155,13 +1148,21 @@ function setupStep3() {
           updateMetaFields(container, { email: AppState.formData.email });
           
           if (typeof analytics !== 'undefined' && typeof analytics.track === 'function') {
-            analytics.track('obie_form_step_3', {
-              rentalIncome: newRadio.value,
-              rentalUnits: AppState.formData.rentalUnits,
+            const metaData = getMetaData();
+            
+            analytics.track('lp_lead', {
+              firstName: AppState.formData.firstName,
+              lastName: AppState.formData.lastName,
               email: AppState.formData.email,
               phone: AppState.formData.phone,
-              firstName: AppState.formData.firstName,
-              lastName: AppState.formData.lastName
+              address: AppState.formData.address,
+              rentalIncome: newRadio.value,
+              rentalUnits: AppState.formData.rentalUnits,
+              sfdc_Lead_Source: window.global_sfdc_Lead_Source
+            }, {
+              context: {
+                traits: metaData
+              }
             });
           }
           
