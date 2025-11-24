@@ -717,11 +717,11 @@ function submitFormToWebflow(container, callback) {
       return;
     }
     
-    const siteId = form.closest('[data-wf-site]')?.getAttribute('data-wf-site') || 
+    const siteId = form.closest('[data-wf-site]')?.getAttribute('data-wf-site') ||
                    document.documentElement.getAttribute('data-wf-site');
     const pageId = form.getAttribute('data-wf-page-id');
     const elementId = form.getAttribute('data-wf-element-id');
-    const formName = form.getAttribute('name') || form.getAttribute('data-name') || 'Email Form';
+    const formName = form.getAttribute('data-name') || form.getAttribute('name') || 'Email Form';
     
     if (!siteId || !pageId || !elementId) {
       console.error('Missing required form attributes (site ID, page ID, or element ID)');
@@ -737,8 +737,7 @@ function submitFormToWebflow(container, callback) {
     params.append('domain', window.location.hostname);
     params.append('source', window.location.href);
     params.append('test', 'false');
-    params.append('dolphin', 'false');
-    
+
     params.append('fields[Property Address]', AppState.formData.address || '');
     params.append('fields[Valid Email]', AppState.formData.email || '');
     params.append('fields[Phone Number]', AppState.formData.phone || '');
@@ -746,7 +745,7 @@ function submitFormToWebflow(container, callback) {
     params.append('fields[Last Name]', AppState.formData.lastName || '');
     params.append('fields[Rental Units]', AppState.formData.rentalUnits || '');
     params.append('fields[Rental Income]', AppState.formData.rentalIncome || '');
-    
+
     const metaContainer = form.querySelector('[p-obie__steps-meta]');
     if (metaContainer) {
       const metaInputs = metaContainer.querySelectorAll('input[type="hidden"]');
@@ -758,29 +757,45 @@ function submitFormToWebflow(container, callback) {
         }
       });
     }
+
+    params.append('dolphin', 'false');
     
+    const bodyString = params.toString();
+
     console.log('Submitting form to Webflow:', {
       siteId: siteId,
       pageId: pageId,
       elementId: elementId,
       formName: formName
     });
-    
+    console.log('Request body:', bodyString);
+
     fetch(`https://webflow.com/api/v1/form/${siteId}`, {
       method: 'POST',
       headers: {
+        'Accept': 'application/json, text/javascript, */*; q=0.01',
         'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
       },
-      body: params.toString(),
+      body: bodyString,
       mode: 'cors',
       credentials: 'omit'
     })
     .then(response => {
-      if (response.ok) {
-        console.log('Form successfully submitted to Webflow');
-      } else {
-        console.error('Form submission failed:', response.status);
-      }
+      console.log('Webflow response status:', response.status);
+      console.log('Webflow response ok:', response.ok);
+
+      return response.text().then(text => {
+        console.log('Webflow response body:', text);
+
+        if (response.ok) {
+          console.log('Form successfully submitted to Webflow');
+        } else {
+          console.error('Form submission failed with status:', response.status);
+          console.error('Response body:', text);
+        }
+
+        return { response, text };
+      });
     })
     .catch(error => {
       console.error('Error submitting form to Webflow:', error);
