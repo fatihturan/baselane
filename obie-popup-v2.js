@@ -161,6 +161,14 @@ function getFacebookParameters() {
   };
 }
 
+function getClickIds() {
+  const urlParams = new URLSearchParams(window.location.search);
+  return {
+    fbclid: urlParams.get('fbclid') || null,
+    gclid: urlParams.get('gclid') || null
+  };
+}
+
 function getUserId() {
   if (typeof analytics !== 'undefined' && analytics.user && typeof analytics.user === 'function') {
     const user = analytics.user();
@@ -179,10 +187,11 @@ function getUserId() {
 function getMetaData() {
   const urlParams = getUTMParameters();
   const fbParams = getFacebookParameters();
+  const clickIds = getClickIds();
   const userId = getUserId();
   const userAgent = navigator.userAgent || null;
   const pageUrl = window.location.href;
-  
+
   return {
     page_url: pageUrl,
     utm_source: urlParams.utm_source,
@@ -193,6 +202,8 @@ function getMetaData() {
     utm_content: urlParams.utm_content,
     fbc: fbParams.fbc,
     fbp: fbParams.fbp,
+    fbclid: clickIds.fbclid,
+    gclid: clickIds.gclid,
     user_agent: userAgent,
     user_id: userId
   };
@@ -200,16 +211,17 @@ function getMetaData() {
 
 function updateMetaFields(container, additionalData = {}) {
   if (!container) return;
-  
+
   const metaContainer = container.querySelector('[p-obie__steps-meta]');
   if (!metaContainer) return;
-  
+
   const urlParams = getUTMParameters();
   const fbParams = getFacebookParameters();
+  const clickIds = getClickIds();
   const userId = getUserId();
   const userAgent = navigator.userAgent || null;
   const pageUrl = window.location.href;
-  
+
   const metaFields = {
     'data-meta-page-url': pageUrl,
     'data-meta-utm-source': urlParams.utm_source,
@@ -220,11 +232,13 @@ function updateMetaFields(container, additionalData = {}) {
     'data-meta-utm-content': urlParams.utm_content,
     'data-meta-fbc': fbParams.fbc,
     'data-meta-fbp': fbParams.fbp,
+    'data-meta-fbclid': clickIds.fbclid,
+    'data-meta-gclid': clickIds.gclid,
     'data-meta-email': additionalData.email || AppState.formData.email || null,
     'data-meta-user-agent': userAgent,
     'data-meta-user-id': userId
   };
-  
+
   for (const [selector, value] of Object.entries(metaFields)) {
     const input = metaContainer.querySelector(`[${selector}]`);
     if (input) {
