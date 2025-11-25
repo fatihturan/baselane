@@ -316,22 +316,27 @@ function loadIMaskLibrary() {
 }
 
 function initializePhoneMask() {
-  const popupContainer = document.querySelector('#glightbox-body [popup__content]') || 
+  const popupContainer = document.querySelector('#glightbox-body [popup__content]') ||
                         document.querySelector('#obie');
-  
+
   if (!popupContainer) return;
-  
+
   const phoneInput = popupContainer.querySelector('.obie-phone');
-  
+
   if (!phoneInput) {
     return;
   }
-  
+
+  // Check if already initialized to prevent reinitialization
+  if (phoneInput.getAttribute('data-mask-initialized') === 'true') {
+    return;
+  }
+
   const inputId = phoneInput.id || 'popup-phone-' + Date.now();
   if (!phoneInput.id) {
     phoneInput.id = inputId;
   }
-  
+
   if (AppState.instances.phoneMask.has(inputId)) {
     try {
       const existingMask = AppState.instances.phoneMask.get(inputId);
@@ -343,25 +348,35 @@ function initializePhoneMask() {
       console.warn('Error cleaning up existing phone mask:', error);
     }
   }
-  
-  phoneInput.removeAttribute('data-mask-initialized');
-  
+
   loadIMaskLibrary().then(() => {
     if (!window.IMask) {
       throw new Error('IMask not available');
     }
-    
+
     const maskOptions = {
-      mask: '+10000000000',
+      mask: '+1 (000) 000-0000',
       lazy: true
     };
-    
+
     const mask = IMask(phoneInput, maskOptions);
-    
+
+    phoneInput.addEventListener('focus', function() {
+      mask.updateOptions({ lazy: false });
+      mask.updateValue();
+    });
+
+    phoneInput.addEventListener('blur', function() {
+      if (!mask.unmaskedValue || mask.unmaskedValue.length === 0) {
+        mask.updateOptions({ lazy: true });
+        mask.value = '';
+      }
+    });
+
     AppState.instances.phoneMask.set(inputId, mask);
-    
+
     phoneInput.setAttribute('data-mask-initialized', 'true');
-    
+
   }).catch(error => {
     console.error('IMask failed to load:', error);
   });
