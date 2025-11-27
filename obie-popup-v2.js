@@ -908,6 +908,13 @@ function handleObieSubmission(email, phone, address) {
     });
     
     Obie.events.on("modal_closed", () => {
+
+      setTimeout(() => {
+        document.body.style.removeProperty('position');
+        document.body.style.removeProperty('overflow');
+        document.body.style.removeProperty('width');
+      }, 300);
+
       if (quoteCreated) {
         console.log("Obie popup closed");
         
