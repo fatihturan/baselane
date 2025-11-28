@@ -174,3 +174,8 @@ input[type=number] {
 .goverlay {
 	background: rgba(11, 32, 51, .8) !important;
 }
+
+.rich-text-article a:has(img), 
+.rich-text-article a:has(img):hover {
+	background: none;
+}
