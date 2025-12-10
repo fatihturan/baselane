@@ -1,11 +1,11 @@
 // Custom text variables
 const acfData = {
-    "apyvalue": "2.93%",
-    "apytier1": "1.69%",
-    "apytier2": "2.39%",
-    "apytier3": "2.71%",
+    "apyvalue": "2.63%",
+    "apytier1": "1.30%",
+    "apytier2": "2.03%",
+    "apytier3": "2.39%",
     "apymultiple": "60x",
-    "apy_update_date": "10/29/2025",
+    "apy_update_date": "12/10/2025",
     "nationalapy": "0.07%",
     "cashback_uppercase": "Unlimited 1%",
     "cashback_lowercase": "unlimited 1%",
