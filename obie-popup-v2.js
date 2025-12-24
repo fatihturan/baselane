@@ -21,7 +21,8 @@ const AppState = {
     firstName: "",
     lastName: "",
     rentalUnits: "",
-    rentalIncome: ""
+    rentalIncome: "",
+    contactMethod: ""
   },
   
   resetAddress() {
@@ -42,7 +43,8 @@ const AppState = {
       firstName: "",
       lastName: "",
       rentalUnits: "",
-      rentalIncome: ""
+      rentalIncome: "",
+      contactMethod: ""
     };
   },
   
@@ -1192,31 +1194,21 @@ function setupStep3() {
       const handleSelection = function() {
         if (newRadio.checked) {
           AppState.formData.rentalIncome = newRadio.value;
-          
+
           updateMetaFields(container, { email: AppState.formData.email });
-          
+
           if (typeof analytics !== 'undefined' && typeof analytics.track === 'function') {
-            const metaData = getMetaData();
-            
-            analytics.track('lp_lead', {
-              firstName: AppState.formData.firstName,
-              lastName: AppState.formData.lastName,
-              email: AppState.formData.email,
-              phone: AppState.formData.phone,
-              address: AppState.formData.address,
+            analytics.track('obie_form_step_3', {
               rentalIncome: newRadio.value,
               rentalUnits: AppState.formData.rentalUnits,
-              sfdc_Lead_Source: window.global_sfdc_Lead_Source
-            }, {
-              context: {
-                traits: metaData
-              }
+              email: AppState.formData.email,
+              phone: AppState.formData.phone,
+              firstName: AppState.formData.firstName,
+              lastName: AppState.formData.lastName,
             });
           }
-          
-          console.log('Form completed with data:', AppState.formData);
-          
-          handleObieSubmission(AppState.formData.email, AppState.formData.phone, AppState.formData.address);
+
+          showStep(4);
         }
       };
       
@@ -1226,6 +1218,72 @@ function setupStep3() {
         const newLabel = label.cloneNode(true);
         label.parentNode.replaceChild(newLabel, label);
         
+        newLabel.addEventListener('click', function(e) {
+          e.preventDefault();
+          newRadio.checked = true;
+          handleSelection();
+        });
+      }
+    });
+  });
+}
+
+function setupStep4() {
+  const popupContainers = document.querySelectorAll('[p-obie]');
+
+  popupContainers.forEach(function(container) {
+    const step4 = container.querySelector('.p-obie__step-4');
+    if (!step4) return;
+
+    const radioRows = step4.querySelectorAll('[radio-row]');
+
+    radioRows.forEach(function(row) {
+      const radio = row.querySelector('input[name="obie-step-4-contact"]');
+      const label = row.querySelector('[radio-row__label]');
+
+      if (!radio) return;
+
+      const newRadio = radio.cloneNode(true);
+      radio.parentNode.replaceChild(newRadio, radio);
+
+      const handleSelection = function() {
+        if (newRadio.checked) {
+          AppState.formData.contactMethod = newRadio.value;
+
+          updateMetaFields(container, { email: AppState.formData.email });
+
+          if (typeof analytics !== 'undefined' && typeof analytics.track === 'function') {
+            const metaData = getMetaData();
+
+            analytics.track('lp_lead', {
+              firstName: AppState.formData.firstName,
+              lastName: AppState.formData.lastName,
+              email: AppState.formData.email,
+              phone: AppState.formData.phone,
+              address: AppState.formData.address,
+              rentalIncome: AppState.formData.rentalIncome,
+              rentalUnits: AppState.formData.rentalUnits,
+              contactMethod: AppState.formData.contactMethod,
+              sfdc_Lead_Source: window.global_sfdc_Lead_Source
+            }, {
+              context: {
+                traits: metaData
+              }
+            });
+          }
+
+          console.log('Form completed with data:', AppState.formData);
+
+          handleObieSubmission(AppState.formData.email, AppState.formData.phone, AppState.formData.address);
+        }
+      };
+
+      newRadio.addEventListener('change', handleSelection);
+
+      if (label) {
+        const newLabel = label.cloneNode(true);
+        label.parentNode.replaceChild(newLabel, label);
+
         newLabel.addEventListener('click', function(e) {
           e.preventDefault();
           newRadio.checked = true;
@@ -1298,6 +1356,7 @@ function initializeAllSteps() {
   setupStep1();
   setupStep2();
   setupStep3();
+  setupStep4();
   setupRealTimeValidation();
   initializeMetaFields();
 }
