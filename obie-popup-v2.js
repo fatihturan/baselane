@@ -763,6 +763,7 @@ function submitFormToWebflow(container, callback) {
     params.append('fields[Last Name]', AppState.formData.lastName || '');
     params.append('fields[Rental Units]', AppState.formData.rentalUnits || '');
     params.append('fields[Rental Income]', AppState.formData.rentalIncome || '');
+    params.append('fields[Contact Method]', AppState.formData.contactMethod || '');
 
     const metaContainer = form.querySelector('[p-obie__steps-meta]');
     if (metaContainer) {
