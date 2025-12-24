@@ -237,6 +237,7 @@ function updateMetaFields(container, additionalData = {}) {
     'data-meta-fbclid': clickIds.fbclid,
     'data-meta-gclid': clickIds.gclid,
     'data-meta-email': additionalData.email || AppState.formData.email || null,
+    'data-meta-contact-method': additionalData.contactMethod || AppState.formData.contactMethod || null,
     'data-meta-user-agent': userAgent,
     'data-meta-user-id': userId
   };
@@ -1250,10 +1251,14 @@ function setupStep4() {
         if (newRadio.checked) {
           AppState.formData.contactMethod = newRadio.value;
 
-          updateMetaFields(container, { email: AppState.formData.email });
+          updateMetaFields(container, {
+            email: AppState.formData.email,
+            contactMethod: AppState.formData.contactMethod
+          });
 
           if (typeof analytics !== 'undefined' && typeof analytics.track === 'function') {
             const metaData = getMetaData();
+            metaData.contactMethod = AppState.formData.contactMethod;
 
             analytics.track('lp_lead', {
               firstName: AppState.formData.firstName,
