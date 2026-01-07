@@ -148,18 +148,6 @@ input[type=number] {
 	height: 100%;
 }
   
-[tag-button]:hover::after {
-  content: "";
-  position: absolute;
-  left: 16px;
-  top: 50%;
-  width: 5px;
-  height: 5px;
-  background: #0B2033;
-	transform: translateY(-50%);
-  border-radius: 100px;
-}
-  
 [data-checklist="true"] ul {
   padding-left: 0;
 }
