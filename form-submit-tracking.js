@@ -196,9 +196,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     } else {
                         if (disableURLQueryParamsCarrying) {
-                            targetURL = new URL('https://app.baselane.com/signup/?ref=brand');
+                            targetURL = new URL('https://app.baselane.com/signup');
                         } else {
-                            targetURL = new URL('https://app.baselane.com/signup/?ref=brand' + (URLQueryParams ? '&' + decodeURIComponent(URLQueryParams) : ''));
+                            targetURL = new URL('https://app.baselane.com/signup' + (URLQueryParams ? '&' + decodeURIComponent(URLQueryParams) : ''));
                         }
                     }
                     
