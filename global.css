@@ -267,12 +267,18 @@ input[type=number] {
 				outline-width: 1.5px;
 				outline-style: dashed;
 			}
+
+			&:not(:hover) img {
+				filter: brightness(0) saturate(100%) invert(9%) sepia(28%) saturate(3908%) hue-rotate(175deg) brightness(92%) contrast(99%);
+			}
+
 		}
 
 		/* Outline - Light */
 		&[data-mobile-appearance="Outline - Light"] {
 			border-width: 1px;
 			border-color: var(--_v2--components---button--outline--light--stroke, var(--baselane----design-system-a29a_v2--components---button--outline--light--stroke));
+			color: var(--_v2--semantic---text--brand--white, var(--baselane----design-system-a29a_v2--semantic---text--brand--white));
 			background-color: transparent;
 
 			&:hover {
@@ -289,6 +295,10 @@ input[type=number] {
 				outline-offset: 2px;
 				outline-width: 1.5px;
 				outline-style: dashed;
+			}
+
+			& img {
+				filter: brightness(0) saturate(100%) invert(93%) sepia(6%) saturate(971%) hue-rotate(318deg) brightness(109%) contrast(101%);
 			}
 		}
 	}
