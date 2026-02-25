@@ -168,27 +168,27 @@ input[type=number] {
 	background: none;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1023px) {
 	[button] {
 
 		/* Filled - Dark (default variant) */
 		&[data-mobile-appearance="Filled - Dark"] {
-			background-color: var(--_v2--components---button--filled--dark--bg-normal);
-			color: var(--_v2--semantic---text--brand--white);
+			background-color: var(--_v2--components---button--filled--dark--bg-normal, var(--baselane----design-system-a29a_v2--components---button--filled--dark--bg-normal));
+			color: var(--_v2--semantic---text--brand--white, var(--baselane----design-system-a29a_v2--semantic---text--brand--white));
 			border-width: 0;
 			border-color: transparent;
 
 			&:hover {
-				background-color: var(--_v2--components---button--filled--dark--bg-hover);
-				color: var(--_v2--semantic---text--brand--white);
+				background-color: var(--_v2--components---button--filled--dark--bg-hover, var(--baselane----design-system-a29a_v2--components---button--filled--dark--bg-hover));
+				color: var(--_v2--semantic---text--brand--white, var(--baselane----design-system-a29a_v2--semantic---text--brand--white));
 			}
 
 			&:active {
-				background-color: var(--_v2--components---button--filled--dark--bg-active);
+				background-color: var(--_v2--components---button--filled--dark--bg-active, var(--baselane----design-system-a29a_v2--components---button--filled--dark--bg-active));
 			}
 
 			&:focus-visible {
-				outline-color: var(--_v2--components---button--filled--dark--bg-active);
+				outline-color: var(--_v2--components---button--filled--dark--bg-active, var(--baselane----design-system-a29a_v2--components---button--filled--dark--bg-active));
 				outline-offset: 2px;
 				outline-width: 1.5px;
 				outline-style: dashed;
@@ -197,22 +197,22 @@ input[type=number] {
 
 		/* Filled - Light */
 		&[data-mobile-appearance="Filled - Light"] {
-			background-color: var(--_v2--components---button--filled--light--bg-normal);
-			color: var(--_v2--semantic---text--brand--black);
+			background-color: var(--_v2--components---button--filled--light--bg-normal, var(--baselane----design-system-a29a_v2--components---button--filled--light--bg-normal));
+			color: var(--_v2--semantic---text--brand--black, var(--baselane----design-system-a29a_v2--semantic---text--brand--black));
 			border-width: 0;
 			border-color: transparent;
 
 			&:hover {
-				background-color: var(--_v2--components---button--filled--light--bg-hover);
-				color: var(--_v2--semantic---text--brand--black);
+				background-color: var(--_v2--components---button--filled--light--bg-hover, var(--baselane----design-system-a29a_v2--components---button--filled--light--bg-hover));
+				color: var(--_v2--semantic---text--brand--black, var(--baselane----design-system-a29a_v2--semantic---text--brand--black));
 			}
 
 			&:active {
-				background-color: var(--_v2--components---button--filled--light--bg-active);
+				background-color: var(--_v2--components---button--filled--light--bg-active, var(--baselane----design-system-a29a_v2--components---button--filled--light--bg-active));
 			}
 
 			&:focus-visible {
-				outline-color: var(--_v2--components---button--filled--light--bg-active);
+				outline-color: var(--_v2--components---button--filled--light--bg-active, var(--baselane----design-system-a29a_v2--components---button--filled--light--bg-active));
 				outline-offset: 2px;
 				outline-width: 1.5px;
 				outline-style: dashed;
@@ -221,23 +221,23 @@ input[type=number] {
 
 		/* Filled - Green */
 		&[data-mobile-appearance="Filled - Green"] {
-			background-color: var(--_v2--components---button--filled--green--bg-normal);
-			color: var(--_v2--components---button--filled--green--text-normal);
+			background-color: var(--_v2--components---button--filled--green--bg-normal, var(--baselane----design-system-a29a_v2--components---button--filled--green--bg-normal));
+			color: var(--_v2--components---button--filled--green--text-normal, var(--baselane----design-system-a29a_v2--components---button--filled--green--text-normal));
 			border-width: 0;
 			border-color: transparent;
 
 			&:hover {
-				background-color: var(--_v2--components---button--filled--green--bg-hover);
-				color: var(--_v2--components---button--filled--green--text-normal);
+				background-color: var(--_v2--components---button--filled--green--bg-hover, var(--baselane----design-system-a29a_v2--components---button--filled--green--bg-hover));
+				color: var(--_v2--components---button--filled--green--text-normal, var(--baselane----design-system-a29a_v2--components---button--filled--green--text-normal));
 			}
 
 			&:active {
-				background-color: var(--_v2--components---button--filled--green--bg-active);
-				color: var(--_v2--components---button--filled--green--text-normal);
+				background-color: var(--_v2--components---button--filled--green--bg-active, var(--baselane----design-system-a29a_v2--components---button--filled--green--bg-active));
+				color: var(--_v2--components---button--filled--green--text-normal, var(--baselane----design-system-a29a_v2--components---button--filled--green--text-normal));
 			}
 
 			&:focus-visible {
-				outline-color: var(--_v2--components---button--filled--light--bg-active);
+				outline-color: var(--_v2--components---button--filled--light--bg-active, var(--baselane----design-system-a29a_v2--components---button--filled--light--bg-active));
 				outline-offset: 2px;
 				outline-width: 1.5px;
 				outline-style: dashed;
@@ -247,22 +247,22 @@ input[type=number] {
 		/* Outline - Dark */
 		&[data-mobile-appearance="Outline - Dark"] {
 			border-width: 1px;
-			border-color: var(--_v2--components---button--outline--dark--stroke);
-			color: var(--_v2--semantic---text--brand--navy);
+			border-color: var(--_v2--components---button--outline--dark--stroke, var(--baselane----design-system-a29a_v2--components---button--outline--dark--stroke));
+			color: var(--_v2--semantic---text--brand--navy, var(--baselane----design-system-a29a_v2--semantic---text--brand--navy));
 			background-color: transparent;
 
 			&:hover {
-				background-color: var(--_v2--components---button--outline--dark--bg-hover);
-				color: var(--_v2--semantic---text--brand--white);
+				background-color: var(--_v2--components---button--outline--dark--bg-hover, var(--baselane----design-system-a29a_v2--components---button--outline--dark--bg-hover));
+				color: var(--_v2--semantic---text--brand--white, var(--baselane----design-system-a29a_v2--semantic---text--brand--white));
 				border-color: transparent;
 			}
 
 			&:active {
-				background-color: var(--_v2--components---button--outline--dark--bg-active);
+				background-color: var(--_v2--components---button--outline--dark--bg-active, var(--baselane----design-system-a29a_v2--components---button--outline--dark--bg-active));
 			}
 
 			&:focus-visible {
-				outline-color: var(--_v2--components---button--filled--dark--bg-active);
+				outline-color: var(--_v2--components---button--filled--dark--bg-active, var(--baselane----design-system-a29a_v2--components---button--filled--dark--bg-active));
 				outline-offset: 2px;
 				outline-width: 1.5px;
 				outline-style: dashed;
@@ -272,20 +272,20 @@ input[type=number] {
 		/* Outline - Light */
 		&[data-mobile-appearance="Outline - Light"] {
 			border-width: 1px;
-			border-color: var(--_v2--components---button--outline--light--stroke);
+			border-color: var(--_v2--components---button--outline--light--stroke, var(--baselane----design-system-a29a_v2--components---button--outline--light--stroke));
 			background-color: transparent;
 
 			&:hover {
-				background-color: var(--_v2--components---button--outline--light--bg-hover);
+				background-color: var(--_v2--components---button--outline--light--bg-hover, var(--baselane----design-system-a29a_v2--components---button--outline--light--bg-hover));
 				border-color: transparent;
 			}
 
 			&:active {
-				background-color: var(--_v2--components---button--outline--light--bg-active);
+				background-color: var(--_v2--components---button--outline--light--bg-active, var(--baselane----design-system-a29a_v2--components---button--outline--light--bg-active));
 			}
 
 			&:focus-visible {
-				outline-color: var(--_v2--components---button--filled--light--bg-active);
+				outline-color: var(--_v2--components---button--filled--light--bg-active, var(--baselane----design-system-a29a_v2--components---button--filled--light--bg-active));
 				outline-offset: 2px;
 				outline-width: 1.5px;
 				outline-style: dashed;
