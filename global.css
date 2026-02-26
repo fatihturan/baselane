@@ -168,6 +168,13 @@ input[type=number] {
 	background: none;
 }
 
+/* Remove extra space on texts for Helvetica Now Display Pro font */
+.u-trim-space,
+[u-trim-space] {
+	text-box: trim-both cap alphabetic
+}
+
+/* Button v2 appearance transition between desktop and mobile breakpoints */
 @media (max-width: 1023px) {
 	[button] {
 
