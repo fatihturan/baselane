@@ -179,7 +179,7 @@ input[type=number] {
 	[button] {
 
 		/* Filled - Dark (default variant) */
-		&[data-mobile-appearance="Filled - Dark"] {
+		&[data-mobile-appearance="Filled - Dark" i] {
 			background-color: var(--_v2--components---button--filled--dark--bg-normal, var(--baselane----design-system-a29a_v2--components---button--filled--dark--bg-normal));
 			color: var(--_v2--semantic---text--brand--white, var(--baselane----design-system-a29a_v2--semantic---text--brand--white));
 			border-width: 0;
@@ -203,7 +203,7 @@ input[type=number] {
 		}
 
 		/* Filled - Light */
-		&[data-mobile-appearance="Filled - Light"] {
+		&[data-mobile-appearance="Filled - Light" i] {
 			background-color: var(--_v2--components---button--filled--light--bg-normal, var(--baselane----design-system-a29a_v2--components---button--filled--light--bg-normal));
 			color: var(--_v2--semantic---text--brand--black, var(--baselane----design-system-a29a_v2--semantic---text--brand--black));
 			border-width: 0;
@@ -227,7 +227,7 @@ input[type=number] {
 		}
 
 		/* Filled - Green */
-		&[data-mobile-appearance="Filled - Green"] {
+		&[data-mobile-appearance="Filled - Green" i] {
 			background-color: var(--_v2--components---button--filled--green--bg-normal, var(--baselane----design-system-a29a_v2--components---button--filled--green--bg-normal));
 			color: var(--_v2--components---button--filled--green--text-normal, var(--baselane----design-system-a29a_v2--components---button--filled--green--text-normal));
 			border-width: 0;
@@ -252,7 +252,7 @@ input[type=number] {
 		}
 
 		/* Outline - Dark */
-		&[data-mobile-appearance="Outline - Dark"] {
+		&[data-mobile-appearance="Outline - Dark" i] {
 			border-width: 1px;
 			border-color: var(--_v2--components---button--outline--dark--stroke, var(--baselane----design-system-a29a_v2--components---button--outline--dark--stroke));
 			color: var(--_v2--semantic---text--brand--navy, var(--baselane----design-system-a29a_v2--semantic---text--brand--navy));
@@ -282,7 +282,7 @@ input[type=number] {
 		}
 
 		/* Outline - Light */
-		&[data-mobile-appearance="Outline - Light"] {
+		&[data-mobile-appearance="Outline - Light" i] {
 			border-width: 1px;
 			border-color: var(--_v2--components---button--outline--light--stroke, var(--baselane----design-system-a29a_v2--components---button--outline--light--stroke));
 			color: var(--_v2--semantic---text--brand--white, var(--baselane----design-system-a29a_v2--semantic---text--brand--white));
