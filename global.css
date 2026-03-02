@@ -175,7 +175,7 @@ input[type=number] {
 }
 
 /* Button v2 appearance transition between desktop and mobile breakpoints */
-@media (max-width: 1023px) {
+@media (max-width: 990px) {
 	[button] {
 
 		/* Filled - Dark (default variant) */
@@ -349,7 +349,7 @@ input[type=number] {
 }
 
 /* Tag v2 appearance transition between desktop and mobile breakpoints */
-@media (max-width: 1023px) {
+@media (max-width: 990px) {
 	[tag] {
 	
 		/* Dark */
