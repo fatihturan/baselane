@@ -43,21 +43,14 @@ Webflow.push(function() {
 			log(`offset-by: "${selector}" → ${offsetTarget ? `found, height: ${height}px` : 'element not found'}`);
 			offset += height;
 		} else {
-			// Auto-detect sticky headers via [n-header] and [header] attributes
-			const nHeaders = document.querySelectorAll('[n-header]');
-			const headers = document.querySelectorAll('[header]');
-
-			nHeaders.forEach(el => {
-				const height = Math.round(el.getBoundingClientRect().height);
-				log(`auto n-header offset: <${el.tagName.toLowerCase()}> height: ${height}px + 30px`);
-				offset += height + 60;
-			});
-
-			headers.forEach(el => {
-				const height = Math.round(el.getBoundingClientRect().height);
-				log(`auto header offset: <${el.tagName.toLowerCase()}> height: ${height}px`);
-				offset += height;
-			});
+			// Auto-detect sticky header via first [n-header] or [header] element
+			const header = document.querySelector('[n-header]') || document.querySelector('[header]');
+			if (header) {
+				const height = Math.round(header.getBoundingClientRect().height);
+				const isNHeader = header.hasAttribute('n-header');
+				log(`auto ${isNHeader ? 'n-header' : 'header'} offset: <${header.tagName.toLowerCase()}> height: ${height}px${isNHeader ? ' + 60px' : ''}`);
+				offset += isNHeader ? height + 60 : height;
+			}
 		}
 
 		// Static part: additional fixed pixel value added on top
@@ -115,7 +108,10 @@ Webflow.push(function() {
 
 		e.preventDefault();
 		const target = document.getElementById(href.slice(1));
-		if (target) smoothScroll(target, anchor);
+		if (target) {
+			smoothScroll(target, anchor);
+			history.pushState(null, '', href);
+		}
 	}
 
 	function handleHashChange() {
