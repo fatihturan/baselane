@@ -44,8 +44,16 @@ Webflow.push(function() {
 			offset += height;
 		} else {
 			// Auto-detect sticky headers via [n-header] and [header] attributes
-			const autoHeaders = document.querySelectorAll('[n-header], [header]');
-			autoHeaders.forEach(el => {
+			const nHeaders = document.querySelectorAll('[n-header]');
+			const headers = document.querySelectorAll('[header]');
+
+			nHeaders.forEach(el => {
+				const height = Math.round(el.getBoundingClientRect().height);
+				log(`auto n-header offset: <${el.tagName.toLowerCase()}> height: ${height}px + 30px`);
+				offset += height + 60;
+			});
+
+			headers.forEach(el => {
 				const height = Math.round(el.getBoundingClientRect().height);
 				log(`auto header offset: <${el.tagName.toLowerCase()}> height: ${height}px`);
 				offset += height;
