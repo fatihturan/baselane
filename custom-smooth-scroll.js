@@ -42,6 +42,14 @@ Webflow.push(function() {
 			const height = offsetTarget ? Math.round(offsetTarget.getBoundingClientRect().height) : 0;
 			log(`offset-by: "${selector}" → ${offsetTarget ? `found, height: ${height}px` : 'element not found'}`);
 			offset += height;
+		} else {
+			// Auto-detect sticky headers via [n-header] and [header] attributes
+			const autoHeaders = document.querySelectorAll('[n-header], [header]');
+			autoHeaders.forEach(el => {
+				const height = Math.round(el.getBoundingClientRect().height);
+				log(`auto header offset: <${el.tagName.toLowerCase()}> height: ${height}px`);
+				offset += height;
+			});
 		}
 
 		// Static part: additional fixed pixel value added on top
