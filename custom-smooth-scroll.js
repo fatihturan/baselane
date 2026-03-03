@@ -1,7 +1,7 @@
 // Disable Webflow's built-in smooth scrolling (original from: https://www.memberstack.com/scripts/anchor-link-offset)
 var Webflow = Webflow || [];
 Webflow.push(function() {
-	$(function() { 
+	$(function() {
 		$(document).off('click.wf-scroll');
 	});
 });
@@ -21,9 +21,11 @@ Webflow.push(function() {
 		easeOutQuad: t => t * (2 - t),
 		easeInOutQuad: t => t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t,
 		easeInCubic: t => t * t * t,
-		easeOutCubic: t => (--t) * t * t + 1,
+		easeOutCubic: t => (t - 1) * (t - 1) * (t - 1) + 1,
 		easeInOutCubic: t => t < 0.5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1
 	};
+
+	let activeAnimationId = null;
 
 	function log(...args) {
 		if (SCROLL_SETTINGS.debug) console.log('[smooth-scroll]', ...args);
@@ -33,7 +35,7 @@ Webflow.push(function() {
 		let offset = 0;
 
 		// Dynamic part: height of the specified element (e.g. sticky header)
-		const byElement = clickedElement.closest('[custom-scroll-offset-by]');
+		const byElement = clickedElement && clickedElement.closest('[custom-scroll-offset-by]');
 		if (byElement) {
 			const selector = byElement.getAttribute('custom-scroll-offset-by');
 			const offsetTarget = document.querySelector(selector);
@@ -43,7 +45,7 @@ Webflow.push(function() {
 		}
 
 		// Static part: additional fixed pixel value added on top
-		const staticElement = clickedElement.closest('[custom-scroll-offset]');
+		const staticElement = clickedElement && clickedElement.closest('[custom-scroll-offset]');
 		if (staticElement) {
 			const offsetValue = staticElement.getAttribute('custom-scroll-offset');
 			const parsed = offsetValue && !isNaN(parseInt(offsetValue)) ? parseInt(offsetValue) : 0;
@@ -56,7 +58,13 @@ Webflow.push(function() {
 	}
 
 	function smoothScroll(target, clickedElement) {
-		const startPosition = window.pageYOffset;
+		// Cancel any running animation
+		if (activeAnimationId) {
+			cancelAnimationFrame(activeAnimationId);
+			activeAnimationId = null;
+		}
+
+		const startPosition = window.scrollY;
 		const offset = getOffset(clickedElement);
 		const targetPosition = target.getBoundingClientRect().top + startPosition - offset;
 		const distance = targetPosition - startPosition;
@@ -69,52 +77,48 @@ Webflow.push(function() {
 			const progress = Math.min(timeElapsed / SCROLL_SETTINGS.duration, 1);
 			const easeProgress = EASING_FUNCTIONS[SCROLL_SETTINGS.easing](progress);
 			window.scrollTo(0, startPosition + distance * easeProgress);
-			if (timeElapsed < SCROLL_SETTINGS.duration) requestAnimationFrame(animation);
+
+			if (progress < 1) {
+				activeAnimationId = requestAnimationFrame(animation);
+			} else {
+				// Ensure final position is exact
+				window.scrollTo(0, targetPosition);
+				activeAnimationId = null;
+			}
 		}
 
-		requestAnimationFrame(animation);
+		activeAnimationId = requestAnimationFrame(animation);
 	}
 
 	function handleClick(e) {
-		const href = e.currentTarget.getAttribute('href');
-		if (href && href.startsWith('#')) {
-			e.preventDefault();
-			const target = document.getElementById(href.slice(1));
-			if (target) smoothScroll(target, e.currentTarget);
-		}
+		const anchor = e.target.closest('a[href^="#"]');
+		if (!anchor) return;
+
+		const href = anchor.getAttribute('href');
+		if (!href || href === '#') return;
+
+		e.preventDefault();
+		const target = document.getElementById(href.slice(1));
+		if (target) smoothScroll(target, anchor);
 	}
 
 	function handleHashChange() {
-		if (window.location.hash) {
+		if (window.location.hash && window.location.hash !== '#') {
 			const target = document.getElementById(window.location.hash.slice(1));
 			if (target) {
-				// For hash changes, use default offset of 0 since we don't have a clicked element
-				setTimeout(() => {
-					const startPosition = window.pageYOffset;
-					const targetPosition = target.getBoundingClientRect().top + startPosition;
-					const distance = targetPosition - startPosition;
-					let startTime = null;
-
-					function animation(currentTime) {
-						if (startTime === null) startTime = currentTime;
-						const timeElapsed = currentTime - startTime;
-						const progress = Math.min(timeElapsed / SCROLL_SETTINGS.duration, 1);
-						const easeProgress = EASING_FUNCTIONS[SCROLL_SETTINGS.easing](progress);
-						window.scrollTo(0, startPosition + distance * easeProgress);
-						if (timeElapsed < SCROLL_SETTINGS.duration) requestAnimationFrame(animation);
-					}
-
-					requestAnimationFrame(animation);
-				}, 0);
+				setTimeout(() => smoothScroll(target, null), 0);
 			}
 		}
 	}
 
+	let initialized = false;
+
 	function init() {
-		// Apply smooth scroll to all anchor links
-		document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-			anchor.addEventListener('click', handleClick);
-		});
+		if (initialized) return;
+		initialized = true;
+
+		// Use event delegation to support dynamically added elements
+		document.addEventListener('click', handleClick);
 
 		window.addEventListener('hashchange', handleHashChange);
 		handleHashChange(); // Handle initial hash on page load
