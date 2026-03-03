@@ -11,7 +11,8 @@ Webflow.push(function() {
 	// Customizable settings
 	const SCROLL_SETTINGS = {
 		duration: 1000, // in milliseconds
-		easing: 'easeInOutCubic' // 'linear', 'easeInQuad', 'easeOutQuad', 'easeInOutQuad', 'easeInCubic', 'easeOutCubic', 'easeInOutCubic'
+		easing: 'easeInOutCubic', // 'linear', 'easeInQuad', 'easeOutQuad', 'easeInOutQuad', 'easeInCubic', 'easeOutCubic', 'easeInOutCubic'
+		debug: false
 	};
 
 	const EASING_FUNCTIONS = {
@@ -24,19 +25,34 @@ Webflow.push(function() {
 		easeInOutCubic: t => t < 0.5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1
 	};
 
+	function log(...args) {
+		if (SCROLL_SETTINGS.debug) console.log('[smooth-scroll]', ...args);
+	}
+
 	function getOffset(clickedElement) {
-		// Find the closest element with disable-smooth-scroll attribute
-		let element = clickedElement.closest('[disable-smooth-scroll]');
-		if (!element) {
-			// If clicked element doesn't have the attribute, check if it's inside one
-			element = clickedElement.closest('[disable-smooth-scroll]');
+		let offset = 0;
+
+		// Dynamic part: height of the specified element (e.g. sticky header)
+		const byElement = clickedElement.closest('[custom-scroll-offset-by]');
+		if (byElement) {
+			const selector = byElement.getAttribute('custom-scroll-offset-by');
+			const offsetTarget = document.querySelector(selector);
+			const height = offsetTarget ? Math.round(offsetTarget.getBoundingClientRect().height) : 0;
+			log(`offset-by: "${selector}" → ${offsetTarget ? `found, height: ${height}px` : 'element not found'}`);
+			offset += height;
 		}
-		
-		if (!element) return 0;
-		
-		// Get offset value from the attribute
-		const offsetValue = element.getAttribute('disable-smooth-scroll');
-		return offsetValue && !isNaN(parseInt(offsetValue)) ? parseInt(offsetValue) : 0;
+
+		// Static part: additional fixed pixel value added on top
+		const staticElement = clickedElement.closest('[custom-scroll-offset]');
+		if (staticElement) {
+			const offsetValue = staticElement.getAttribute('custom-scroll-offset');
+			const parsed = offsetValue && !isNaN(parseInt(offsetValue)) ? parseInt(offsetValue) : 0;
+			log(`offset: +${parsed}px (static)`);
+			offset += parsed;
+		}
+
+		log(`total offset: ${offset}px`);
+		return offset;
 	}
 
 	function smoothScroll(target, clickedElement) {
@@ -44,6 +60,7 @@ Webflow.push(function() {
 		const offset = getOffset(clickedElement);
 		const targetPosition = target.getBoundingClientRect().top + startPosition - offset;
 		const distance = targetPosition - startPosition;
+		log(`scrolling to #${target.id} | from: ${Math.round(startPosition)}px | target: ${Math.round(targetPosition)}px | distance: ${Math.round(distance)}px | offset: ${offset}px`);
 		let startTime = null;
 
 		function animation(currentTime) {
@@ -94,21 +111,11 @@ Webflow.push(function() {
 	}
 
 	function init() {
-		// Find all elements with disable-smooth-scroll attribute
-		document.querySelectorAll('[disable-smooth-scroll]').forEach(element => {
-			const href = element.getAttribute('href');
-			
-			if (href && href.startsWith('#')) {
-				// If element has href starting with #, add event listener to it
-				element.addEventListener('click', handleClick);
-			} else {
-				// If element doesn't have href, add event listeners to anchor elements inside it
-				element.querySelectorAll('a[href^="#"]').forEach(anchor => {
-					anchor.addEventListener('click', handleClick);
-				});
-			}
+		// Apply smooth scroll to all anchor links
+		document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+			anchor.addEventListener('click', handleClick);
 		});
-		
+
 		window.addEventListener('hashchange', handleHashChange);
 		handleHashChange(); // Handle initial hash on page load
 	}
