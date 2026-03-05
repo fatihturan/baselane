@@ -7,27 +7,15 @@ phases:
 
   pre_build:
     commands:
-      - echo "Deploying website scripts to S3..."
-      - echo "Target bucket: $S3_BUCKET"
-      - echo "CloudFront distribution: $CLOUDFRONT_DISTRIBUTION_ID"
+      - echo "Deploying website scripts to S3"
+      - echo "Target bucket = $S3_BUCKET"
+      - echo "CloudFront distribution = $CLOUDFRONT_DISTRIBUTION_ID"
 
   build:
     commands:
-      - |
-        aws s3 sync . s3://$S3_BUCKET \
-          --delete \
-          --exclude ".git/*" \
-          --exclude ".github/*" \
-          --exclude ".gitignore" \
-          --exclude "workers/*" \
-          --exclude "buildspec.yml" \
-          --exclude "README.md" \
-          --cache-control "public, max-age=86400"
+      - aws s3 sync . s3://$S3_BUCKET --delete --exclude ".git/*" --exclude ".github/*" --exclude ".gitignore" --exclude "workers/*" --exclude "buildspec.yml" --exclude "README.md" --cache-control "public, max-age=86400"
 
   post_build:
     commands:
-      - |
-        aws cloudfront create-invalidation \
-          --distribution-id $CLOUDFRONT_DISTRIBUTION_ID \
-          --paths "/*"
+      - aws cloudfront create-invalidation --distribution-id $CLOUDFRONT_DISTRIBUTION_ID --paths "/*"
       - echo "Deploy complete. CloudFront invalidation triggered."
