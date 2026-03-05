@@ -13,7 +13,6 @@ phases:
 
   build:
     commands:
-      # Sync all files to S3, excluding non-deployable files
       - |
         aws s3 sync . s3://$S3_BUCKET \
           --delete \
@@ -27,7 +26,6 @@ phases:
 
   post_build:
     commands:
-      # Invalidate CloudFront cache so new files are served immediately
       - |
         aws cloudfront create-invalidation \
           --distribution-id $CLOUDFRONT_DISTRIBUTION_ID \
